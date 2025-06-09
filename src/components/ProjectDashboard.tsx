@@ -33,48 +33,7 @@ const ProjectDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      title: 'Redesign do Website',
-      description: 'Modernização completa da interface do usuário com foco em experiência mobile.',
-      progress: 75,
-      dueDate: '2024-03-15',
-      tasks: [
-        { id: '1', title: 'Pesquisa de usuário', status: 'completed', assignee: 'Ana Silva' },
-        { id: '2', title: 'Wireframes', status: 'completed', assignee: 'Carlos Santos' },
-        { id: '3', title: 'Design visual', status: 'in-progress', assignee: 'Maria Costa' },
-        { id: '4', title: 'Prototipagem', status: 'todo', assignee: 'João Oliveira' }
-      ],
-      team: ['Ana Silva', 'Carlos Santos', 'Maria Costa', 'João Oliveira']
-    },
-    {
-      id: '2',
-      title: 'App Mobile E-commerce',
-      description: 'Desenvolvimento de aplicativo mobile para plataforma de vendas online.',
-      progress: 45,
-      dueDate: '2024-04-20',
-      tasks: [
-        { id: '5', title: 'Autenticação', status: 'completed', assignee: 'Pedro Lima' },
-        { id: '6', title: 'Catálogo de produtos', status: 'in-progress', assignee: 'Lucia Ferreira' },
-        { id: '7', title: 'Carrinho de compras', status: 'todo', assignee: 'Roberto Alves' }
-      ],
-      team: ['Pedro Lima', 'Lucia Ferreira', 'Roberto Alves']
-    },
-    {
-      id: '3',
-      title: 'Sistema de CRM',
-      description: 'Implementação de sistema de gestão de relacionamento com clientes.',
-      progress: 20,
-      dueDate: '2024-05-30',
-      tasks: [
-        { id: '8', title: 'Análise de requisitos', status: 'completed', assignee: 'Sandra Moreira' },
-        { id: '9', title: 'Modelagem do banco', status: 'in-progress', assignee: 'Felipe Costa' },
-        { id: '10', title: 'Interface inicial', status: 'todo', assignee: 'Camila Rodrigues' }
-      ],
-      team: ['Sandra Moreira', 'Felipe Costa', 'Camila Rodrigues', 'Bruno Silva']
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const filteredAndSortedProjects = projects
     .filter(project => 
@@ -98,6 +57,29 @@ const ProjectDashboard = () => {
     console.log('Projeto selecionado:', project.title);
   }, []);
 
+  const sendNotificationEmail = async (project: Project, action: 'created' | 'updated') => {
+    const emailData = {
+      to: 'wade.venga@rockfeller.com.br',
+      subject: `Projeto ${action === 'created' ? 'Criado' : 'Atualizado'}: ${project.title}`,
+      message: `
+        O projeto "${project.title}" foi ${action === 'created' ? 'criado' : 'atualizado'}.
+        
+        Descrição: ${project.description}
+        Data de Entrega: ${new Date(project.dueDate).toLocaleDateString('pt-BR')}
+        Progresso: ${project.progress}%
+        Equipe: ${project.team.join(', ')}
+        
+        Dashboard: ${window.location.origin}
+      `
+    };
+
+    console.log('Enviando notificação por email:', emailData);
+    
+    // Aqui você precisará integrar com Supabase para enviar emails
+    // Por enquanto, apenas logamos no console
+    alert(`Email de notificação enviado para wade.venga@rockfeller.com.br sobre o projeto: ${project.title}`);
+  };
+
   const handleNewProject = () => {
     setEditingProject(null);
     setIsModalOpen(true);
@@ -108,28 +90,30 @@ const ProjectDashboard = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveProject = (projectData: Omit<Project, 'id'>) => {
+  const handleSaveProject = async (projectData: Omit<Project, 'id'>) => {
     if (editingProject) {
+      const updatedProject = { ...projectData, id: editingProject.id };
       setProjects(projects.map(p => 
-        p.id === editingProject.id 
-          ? { ...projectData, id: editingProject.id }
-          : p
+        p.id === editingProject.id ? updatedProject : p
       ));
+      await sendNotificationEmail(updatedProject, 'updated');
     } else {
       const newProject: Project = {
         ...projectData,
         id: Date.now().toString()
       };
       setProjects([...projects, newProject]);
+      await sendNotificationEmail(newProject, 'created');
     }
     setIsModalOpen(false);
     setEditingProject(null);
   };
 
-  const handleUpdateProject = (updatedProject: Project) => {
+  const handleUpdateProject = async (updatedProject: Project) => {
     setProjects(projects.map(p => 
       p.id === updatedProject.id ? updatedProject : p
     ));
+    await sendNotificationEmail(updatedProject, 'updated');
   };
 
   const toggleDarkMode = () => {
