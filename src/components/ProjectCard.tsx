@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Clock, Users, CheckCircle, Circle, AlertCircle, Plus, Edit3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -90,17 +91,17 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
   const totalTasks = localProject.tasks.length;
 
   return (
-    <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 border border-blue-200/50 hover:border-purple-300/60">
+    <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/90 via-blue-50/60 to-purple-50/40 dark:from-gray-800/90 dark:via-purple-900/20 dark:to-blue-900/20 border border-blue-200/50 hover:border-purple-300/60 dark:border-purple-700/30 dark:hover:border-purple-500/50 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <CardTitle 
-            className="text-lg font-semibold text-gray-800 group-hover:text-purple-600 transition-colors cursor-pointer"
+            className="text-lg font-semibold text-gray-800 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors cursor-pointer"
             onClick={onClick}
           >
             {localProject.title}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 border-purple-200 text-purple-700">
+            <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-900/40 dark:to-purple-900/40 border-purple-200 dark:border-purple-600 text-purple-700 dark:text-purple-300">
               {localProject.progress}% concluído
             </Badge>
             <Button
@@ -110,27 +111,27 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
                 e.stopPropagation();
                 setIsManagingTasks(!isManagingTasks);
               }}
-              className="h-8 w-8 p-0 hover:bg-purple-100"
+              className="h-8 w-8 p-0 hover:bg-purple-100 dark:hover:bg-purple-900/50"
             >
-              <Edit3 className="w-4 h-4 text-purple-600" />
+              <Edit3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             </Button>
           </div>
         </div>
-        <p className="text-sm text-gray-600 mt-2" onClick={onClick}>{localProject.description}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2" onClick={onClick}>{localProject.description}</p>
       </CardHeader>
       
       <CardContent className="space-y-4">
         <div className="space-y-2" onClick={onClick}>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Progresso</span>
-            <span className="font-medium text-purple-700">{completedTasks}/{totalTasks} tarefas</span>
+            <span className="text-gray-600 dark:text-gray-400">Progresso</span>
+            <span className="font-medium text-purple-700 dark:text-purple-300">{completedTasks}/{totalTasks} tarefas</span>
           </div>
-          <Progress value={localProject.progress} className="h-2 bg-gray-100" />
+          <Progress value={localProject.progress} className="h-2 bg-gray-100 dark:bg-gray-700" />
         </div>
 
         {isManagingTasks && (
-          <div className="space-y-3 pt-3 border-t border-purple-100">
-            <h4 className="text-sm font-medium text-purple-700">Gerenciar Etapas</h4>
+          <div className="space-y-3 pt-3 border-t border-purple-100 dark:border-purple-800">
+            <h4 className="text-sm font-medium text-purple-700 dark:text-purple-300">Gerenciar Etapas</h4>
             
             {/* Nova tarefa */}
             <div className="space-y-2">
@@ -138,17 +139,17 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
                 placeholder="Nome da etapa"
                 value={newTask.title}
                 onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
-                className="text-sm"
+                className="text-sm dark:bg-gray-800/50 dark:border-gray-600"
               />
               <div className="flex gap-2">
                 <Input
                   placeholder="Responsável"
                   value={newTask.assignee}
                   onChange={(e) => setNewTask(prev => ({ ...prev, assignee: e.target.value }))}
-                  className="text-sm flex-1"
+                  className="text-sm flex-1 dark:bg-gray-800/50 dark:border-gray-600"
                 />
                 <Select value={newTask.status} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger className="w-32 text-sm">
+                  <SelectTrigger className="w-32 text-sm dark:bg-gray-800/50 dark:border-gray-600">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -157,7 +158,7 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
                     <SelectItem value="completed">Concluído</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button onClick={addTask} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                <Button onClick={addTask} size="sm" className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600">
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
@@ -166,16 +167,16 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
             {/* Lista de tarefas */}
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {localProject.tasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-2 bg-purple-50/50 rounded-lg border border-purple-100">
+                <div key={task.id} className="flex items-center justify-between p-2 bg-purple-50/80 dark:bg-purple-900/30 rounded-lg border border-purple-100 dark:border-purple-800">
                   <div className="flex items-center gap-2 flex-1">
                     {getStatusIcon(task.status)}
                     <div className="flex-1">
-                      <p className="text-xs font-medium">{task.title}</p>
-                      <p className="text-xs text-gray-500">{task.assignee}</p>
+                      <p className="text-xs font-medium dark:text-gray-200">{task.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{task.assignee}</p>
                     </div>
                   </div>
                   <Select value={task.status} onValueChange={(value: any) => updateTaskStatus(task.id, value)}>
-                    <SelectTrigger className="w-20 h-6 text-xs">
+                    <SelectTrigger className="w-20 h-6 text-xs dark:bg-gray-800/50 dark:border-gray-600">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -190,10 +191,10 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
           </div>
         )}
         
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100" onClick={onClick}>
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700" onClick={onClick}>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-600">{localProject.dueDate}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{localProject.dueDate}</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -202,13 +203,13 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
               {localProject.team.slice(0, 3).map((member, index) => (
                 <div
                   key={index}
-                  className="w-6 h-6 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-xs text-white font-medium border-2 border-white"
+                  className="w-6 h-6 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-xs text-white font-medium border-2 border-white dark:border-gray-800"
                 >
                   {member.charAt(0).toUpperCase()}
                 </div>
               ))}
               {localProject.team.length > 3 && (
-                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 font-medium border-2 border-white">
+                <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-xs text-gray-600 dark:text-gray-300 font-medium border-2 border-white dark:border-gray-800">
                   +{localProject.team.length - 3}
                 </div>
               )}
@@ -221,3 +222,4 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
 };
 
 export default ProjectCard;
+
