@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Calendar, Clock, User, CheckCircle, AlertCircle, Circle, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -120,7 +119,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
       </div>
 
       {/* Projects Timeline */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {projects.map((project) => {
           const projectTimeline = getProjectTimelineData(project);
           const isExpanded = expandedProjects.has(project.id);
@@ -175,6 +174,9 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                           <Badge variant="outline" className="text-xs px-1 py-0 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/40 dark:to-blue-900/40 border-purple-200 dark:border-purple-600 text-purple-700 dark:text-purple-300">
                             {task.assignees.length > 0 ? task.assignees[0].split(' ')[0] : 'N/A'}
                           </Badge>
+                          {task.dueDate && (
+                            <span className="text-xs text-orange-500">{new Date(task.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
+                          )}
                         </div>
                       ))}
                       {project.tasks.length > 3 && (
@@ -200,7 +202,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
               </Card>
 
               {/* Timeline Bars */}
-              <div className="grid grid-cols-12 gap-1 items-center h-full min-h-[80px]">
+              <div className="grid grid-cols-12 gap-1 items-center h-12">
                 {timelineData.map((month, monthIndex) => {
                   const monthDate = new Date(month.fullDate);
                   const projectDueDate = new Date(project.dueDate);
@@ -258,7 +260,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                                   key={task.id}
                                   className={`absolute top-1 h-3 w-3 rounded-full ${getStatusColor(task.status)} border-2 border-white dark:border-gray-900 flex items-center justify-center transition-all duration-300 hover:scale-110`}
                                   style={{ left: `${weekPos * 25}%` }}
-                                  title={`${task.title} - ${task.assignees.join(', ')}`}
+                                  title={`${task.title} - ${task.assignees.join(', ')}${task.dueDate ? ` (Prazo: ${new Date(task.dueDate).toLocaleDateString('pt-BR')})` : ''}`}
                                 >
                                   <div className="w-1 h-1 bg-white rounded-full"></div>
                                 </div>

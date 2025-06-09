@@ -1,8 +1,10 @@
+
 export interface Task {
   id: string;
   title: string;
   status: 'todo' | 'in-progress' | 'completed';
-  assignees: string[]; // Changed from assignee to assignees array
+  assignees: string[];
+  dueDate?: string; // Nova propriedade para prazo final da tarefa
 }
 
 export interface Project {

@@ -52,7 +52,8 @@ export const useProjects = () => {
           id: task.id,
           title: task.title,
           status: task.status as 'todo' | 'in-progress' | 'completed',
-          assignees: task.assignee ? task.assignee.split(',').map((a: string) => a.trim()) : []
+          assignees: task.assignee ? task.assignee.split(',').map((a: string) => a.trim()) : [],
+          dueDate: task.due_date || undefined
         })) || [],
         team: teamData?.filter(member => member.project_id === project.id).map(member => member.member_name) || []
       })) || [];
@@ -123,7 +124,8 @@ export const useProjects = () => {
               project_id: projectId,
               title: task.title,
               status: task.status,
-              assignee: task.assignees.join(', ')
+              assignee: task.assignees.join(', '),
+              due_date: task.dueDate || null
             }))
           );
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,7 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
     team: [] as string[]
   });
 
-  const [newTask, setNewTask] = useState({ title: '', assignees: [] as string[], status: 'todo' as const });
+  const [newTask, setNewTask] = useState({ title: '', assignees: [] as string[], status: 'todo' as const, dueDate: '' });
   const [newMember, setNewMember] = useState('');
   const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
   const [taskAssigneeDropdownOpen, setTaskAssigneeDropdownOpen] = useState(false);
@@ -112,7 +111,7 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
         ...prev,
         tasks: [...prev.tasks, task]
       }));
-      setNewTask({ title: '', assignees: [], status: 'todo' });
+      setNewTask({ title: '', assignees: [], status: 'todo', dueDate: '' });
       setTaskAssigneeDropdownOpen(false);
     }
   };
@@ -315,18 +314,25 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
               <div className="space-y-2 mt-2">
                 <div className="grid grid-cols-12 gap-2">
                   <Input
-                    className="col-span-4"
+                    className="col-span-3"
                     value={newTask.title}
                     onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="Título da tarefa"
                   />
-                  <div className="col-span-4">
+                  <Input
+                    className="col-span-2"
+                    type="date"
+                    value={newTask.dueDate}
+                    onChange={(e) => setNewTask(prev => ({ ...prev, dueDate: e.target.value }))}
+                    placeholder="Prazo"
+                  />
+                  <div className="col-span-3">
                     <Popover open={taskAssigneeDropdownOpen} onOpenChange={setTaskAssigneeDropdownOpen}>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className="w-full justify-between text-sm">
                           <span className="truncate">
                             {newTask.assignees.length === 0 
-                              ? 'Selecionar responsáveis' 
+                              ? 'Responsáveis' 
                               : `${newTask.assignees.length} selecionado${newTask.assignees.length > 1 ? 's' : ''}`
                             }
                           </span>
@@ -397,6 +403,11 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
                             </Badge>
                           ))}
                         </div>
+                        {task.dueDate && (
+                          <p className="text-xs text-orange-500 mt-1">
+                            Prazo: {new Date(task.dueDate).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => removeTask(task.id)}>

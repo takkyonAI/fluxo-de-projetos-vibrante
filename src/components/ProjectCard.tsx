@@ -17,7 +17,7 @@ interface ProjectCardProps {
 
 const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => {
   const [isManagingTasks, setIsManagingTasks] = useState(false);
-  const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
+  const [newTask, setNewTask] = useState({ title: '', assignees: [] as string[], status: 'todo' as const, dueDate: '' });
   const [localProject, setLocalProject] = useState(project);
 
   const getStatusIcon = (status: string) => {
@@ -32,7 +32,7 @@ const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => 
   };
 
   const addTask = () => {
-    if (newTask.title && newTask.assignee) {
+    if (newTask.title && newTask.assignees.length > 0) {
       const task = {
         id: Date.now().toString(),
         ...newTask
@@ -49,7 +49,7 @@ const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => 
       
       setLocalProject(updatedProject);
       onUpdateProject?.(updatedProject);
-      setNewTask({ title: '', assignee: '', status: 'todo' });
+      setNewTask({ title: '', assignees: [], status: 'todo', dueDate: '' });
     }
   };
 
@@ -118,17 +118,26 @@ const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => 
             
             {/* Nova tarefa */}
             <div className="space-y-2">
-              <Input
-                placeholder="Nome da etapa"
-                value={newTask.title}
-                onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
-                className="text-sm dark:bg-gray-800/50 dark:border-gray-600"
-              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Nome da etapa"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                  className="text-sm dark:bg-gray-800/50 dark:border-gray-600"
+                />
+                <Input
+                  type="date"
+                  placeholder="Prazo"
+                  value={newTask.dueDate}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, dueDate: e.target.value }))}
+                  className="text-sm dark:bg-gray-800/50 dark:border-gray-600"
+                />
+              </div>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Responsável"
-                  value={newTask.assignee}
-                  onChange={(e) => setNewTask(prev => ({ ...prev, assignee: e.target.value }))}
+                  placeholder="Responsáveis (separados por vírgula)"
+                  value={newTask.assignees.join(', ')}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, assignees: e.target.value.split(',').map(a => a.trim()).filter(a => a) }))}
                   className="text-sm flex-1 dark:bg-gray-800/50 dark:border-gray-600"
                 />
                 <Select value={newTask.status} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, status: value }))}>
@@ -155,7 +164,10 @@ const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => 
                     {getStatusIcon(task.status)}
                     <div className="flex-1">
                       <p className="text-xs font-medium dark:text-gray-200">{task.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{task.assignee}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{task.assignees.join(', ')}</p>
+                      {task.dueDate && (
+                        <p className="text-xs text-orange-500 dark:text-orange-400">Prazo: {new Date(task.dueDate).toLocaleDateString('pt-BR')}</p>
+                      )}
                     </div>
                   </div>
                   <Select value={task.status} onValueChange={(value: any) => updateTaskStatus(task.id, value)}>
