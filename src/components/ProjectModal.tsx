@@ -31,9 +31,10 @@ interface ProjectModalProps {
   onClose: () => void;
   onSave: (project: Omit<Project, 'id'>) => void;
   project?: Project;
+  allProjects?: Project[];
 }
 
-const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => {
+const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: ProjectModalProps) => {
   // Resetar dados quando abrir modal para novo projeto
   const [formData, setFormData] = useState({
     title: '',
@@ -46,6 +47,18 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
   const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
   const [newMember, setNewMember] = useState('');
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
+  const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+
+  // Obter todos os membros únicos de todos os projetos
+  const getAllUniqueMembers = () => {
+    const allMembers = new Set<string>();
+    allProjects.forEach(proj => {
+      proj.team.forEach(member => allMembers.add(member));
+    });
+    return Array.from(allMembers).sort();
+  };
+
+  const allUniqueMembers = getAllUniqueMembers();
 
   // Atualizar dados quando project mudar
   React.useEffect(() => {
@@ -109,6 +122,7 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
         team: [...prev.team, newMember]
       }));
       setNewMember('');
+      setShowMemberDropdown(false);
     }
   };
 
@@ -134,14 +148,31 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
     member.toLowerCase().includes(newTask.assignee.toLowerCase())
   );
 
+  // Filtrar membros únicos baseado no que o usuário está digitando
+  const filteredUniqueMembers = allUniqueMembers.filter(member =>
+    member.toLowerCase().includes(newMember.toLowerCase()) && 
+    !formData.team.includes(member)
+  );
+
   const handleAssigneeChange = (value: string) => {
     setNewTask(prev => ({ ...prev, assignee: value }));
     setShowAssigneeDropdown(value.length > 0 && filteredTeamMembers.length > 0);
   };
 
+  const handleMemberChange = (value: string) => {
+    setNewMember(value);
+    setShowMemberDropdown(value.length > 0 && filteredUniqueMembers.length > 0);
+  };
+
   const selectAssignee = (member: string) => {
     setNewTask(prev => ({ ...prev, assignee: member }));
     setShowAssigneeDropdown(false);
+  };
+
+  const selectMember = (member: string) => {
+    setNewMember(member);
+    setShowMemberDropdown(false);
+    addTeamMember();
   };
 
   return (
@@ -192,15 +223,36 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
             <div>
               <Label>Equipe</Label>
               <div className="flex gap-2 mt-1">
-                <Input
-                  value={newMember}
-                  onChange={(e) => setNewMember(e.target.value)}
-                  placeholder="Nome do membro"
-                />
+                <div className="flex-1 relative">
+                  <Input
+                    value={newMember}
+                    onChange={(e) => handleMemberChange(e.target.value)}
+                    placeholder="Nome do membro (digite para ver sugestões)"
+                    onFocus={() => setShowMemberDropdown(newMember.length > 0 && filteredUniqueMembers.length > 0)}
+                  />
+                  {showMemberDropdown && filteredUniqueMembers.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
+                      {filteredUniqueMembers.map((member) => (
+                        <div
+                          key={member}
+                          className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+                          onClick={() => selectMember(member)}
+                        >
+                          {member}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Button onClick={addTeamMember} size="sm">
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
+              {allUniqueMembers.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {allUniqueMembers.length} membros disponíveis de outros projetos
+                </p>
+              )}
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.team.map((member) => (
                   <Badge key={member} variant="secondary" className="flex items-center gap-1">
