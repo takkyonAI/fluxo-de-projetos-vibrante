@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback } from 'react';
 import { Search, Plus, LayoutGrid, BarChart3, Moon, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -156,7 +154,7 @@ const ProjectDashboard = () => {
             <img 
               src="/lovable-uploads/1f1774f4-553f-4b8e-8142-308bd1e09925.png" 
               alt="Rockfeller Logo" 
-              className="h-8 w-auto object-contain"
+              className="h-4 w-auto object-contain"
               style={{ background: 'transparent' }}
             />
             <h1 className="text-2xl font-bold text-white">Dashboard de Projetos Rockfeller</h1>
@@ -263,4 +261,3 @@ const ProjectDashboard = () => {
 };
 
 export default ProjectDashboard;
-
