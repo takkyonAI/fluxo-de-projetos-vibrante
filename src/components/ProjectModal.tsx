@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Plus, X, CheckCircle, Circle, AlertCircle, ChevronDown, Users } from 'lucide-react';
 import { Task, Project } from '@/types/project';
 
 interface ProjectModalProps {
@@ -31,7 +34,7 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
   const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
   const [newMember, setNewMember] = useState('');
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
-  const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+  const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
 
   const getAllUniqueMembers = () => {
     const allMembers = new Set<string>();
@@ -127,8 +130,16 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
         team: [...prev.team, newMember]
       }));
       setNewMember('');
-      setShowMemberDropdown(false);
     }
+  };
+
+  const toggleTeamMember = (member: string) => {
+    setFormData(prev => ({
+      ...prev,
+      team: prev.team.includes(member)
+        ? prev.team.filter(m => m !== member)
+        : [...prev.team, member]
+    }));
   };
 
   const removeMember = (member: string) => {
@@ -152,32 +163,14 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
     member.toLowerCase().includes(newTask.assignee.toLowerCase())
   );
 
-  const filteredUniqueMembers = allUniqueMembers.filter(member =>
-    member.toLowerCase().includes(newMember.toLowerCase()) && 
-    !formData.team.includes(member)
-  );
-
   const handleAssigneeChange = (value: string) => {
     setNewTask(prev => ({ ...prev, assignee: value }));
     setShowAssigneeDropdown(value.length > 0 && filteredTeamMembers.length > 0);
   };
 
-  const handleMemberChange = (value: string) => {
-    setNewMember(value);
-    setShowMemberDropdown(value.length > 0 && filteredUniqueMembers.length > 0);
-  };
-
   const selectAssignee = (member: string) => {
     setNewTask(prev => ({ ...prev, assignee: member }));
     setShowAssigneeDropdown(false);
-  };
-
-  const selectMember = (member: string) => {
-    setNewMember(member);
-    setShowMemberDropdown(false);
-    setTimeout(() => {
-      addTeamMember();
-    }, 0);
   };
 
   return (
@@ -245,44 +238,68 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
 
             <div>
               <Label>Equipe</Label>
-              <div className="flex gap-2 mt-1">
-                <div className="flex-1 relative">
+              <div className="space-y-3 mt-1">
+                <div className="flex gap-2">
                   <Input
                     value={newMember}
-                    onChange={(e) => handleMemberChange(e.target.value)}
-                    placeholder="Nome do membro (digite para ver sugestões)"
-                    onFocus={() => setShowMemberDropdown(newMember.length > 0 && filteredUniqueMembers.length > 0)}
+                    onChange={(e) => setNewMember(e.target.value)}
+                    placeholder="Nome do novo membro"
+                    className="flex-1"
                   />
-                  {showMemberDropdown && filteredUniqueMembers.length > 0 && (
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
-                      {filteredUniqueMembers.map((member) => (
-                        <div
-                          key={member}
-                          className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
-                          onClick={() => selectMember(member)}
-                        >
-                          {member}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <Button onClick={addTeamMember} size="sm">
+                    <Plus className="w-4 h-4" />
+                  </Button>
                 </div>
-                <Button onClick={addTeamMember} size="sm">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-              {allUniqueMembers.length > 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {allUniqueMembers.length} membros disponíveis de outros projetos
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2 mt-2">
-                {formData.team.map((member) => (
-                  <Badge key={member} variant="secondary" className="flex items-center gap-1">
-                    {member}
-                    <X className="w-3 h-3 cursor-pointer" onClick={() => removeMember(member)} />
-                  </Badge>
-                ))}
+
+                {allUniqueMembers.length > 0 && (
+                  <div>
+                    <Popover open={teamDropdownOpen} onOpenChange={setTeamDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Selecionar membros existentes ({formData.team.length} selecionados)
+                          </div>
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar membros..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhum membro encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              {allUniqueMembers.map((member) => (
+                                <CommandItem key={member} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={formData.team.includes(member)}
+                                    onCheckedChange={() => toggleTeamMember(member)}
+                                  />
+                                  <span className="flex-1">{member}</span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {formData.team.map((member) => (
+                    <Badge key={member} variant="secondary" className="flex items-center gap-1">
+                      {member}
+                      <X className="w-3 h-3 cursor-pointer" onClick={() => removeMember(member)} />
+                    </Badge>
+                  ))}
+                </div>
+
+                {allUniqueMembers.length > 0 && (
+                  <p className="text-xs text-gray-500">
+                    {allUniqueMembers.length} membros disponíveis de outros projetos
+                  </p>
+                )}
               </div>
             </div>
           </div>
