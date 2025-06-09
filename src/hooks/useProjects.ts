@@ -2,23 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface Task {
-  id: string;
-  title: string;
-  status: 'todo' | 'in-progress' | 'completed';
-  assignee: string;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  dueDate: string;
-  tasks: Task[];
-  team: string[];
-}
+import { Project, Task } from '@/types/project';
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -35,7 +19,6 @@ export const useProjects = () => {
         return;
       }
 
-      // Carregar projetos
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
@@ -43,7 +26,6 @@ export const useProjects = () => {
 
       if (projectsError) throw projectsError;
 
-      // Carregar tarefas de todos os projetos
       const projectIds = projectsData?.map(p => p.id) || [];
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
@@ -52,7 +34,6 @@ export const useProjects = () => {
 
       if (tasksError) throw tasksError;
 
-      // Carregar membros da equipe
       const { data: teamData, error: teamError } = await supabase
         .from('project_team_members')
         .select('*')
@@ -60,13 +41,13 @@ export const useProjects = () => {
 
       if (teamError) throw teamError;
 
-      // Combinar dados
       const formattedProjects: Project[] = projectsData?.map(project => ({
         id: project.id,
         title: project.title,
         description: project.description || '',
         progress: project.progress,
         dueDate: project.due_date || '',
+        priority: project.priority || 3,
         tasks: tasksData?.filter(task => task.project_id === project.id).map(task => ({
           id: task.id,
           title: task.title,
@@ -100,13 +81,13 @@ export const useProjects = () => {
       let projectId: string;
 
       if (editingProject) {
-        // Atualizar projeto existente
         const { error: updateError } = await supabase
           .from('projects')
           .update({
             title: projectData.title,
             description: projectData.description,
             progress: projectData.progress,
+            priority: projectData.priority,
             due_date: projectData.dueDate || null
           })
           .eq('id', editingProject.id);
@@ -114,17 +95,16 @@ export const useProjects = () => {
         if (updateError) throw updateError;
         projectId = editingProject.id;
 
-        // Deletar tarefas e membros existentes para recriar
         await supabase.from('tasks').delete().eq('project_id', projectId);
         await supabase.from('project_team_members').delete().eq('project_id', projectId);
       } else {
-        // Criar novo projeto
         const { data: newProject, error: insertError } = await supabase
           .from('projects')
           .insert({
             title: projectData.title,
             description: projectData.description,
             progress: projectData.progress,
+            priority: projectData.priority,
             due_date: projectData.dueDate || null,
             user_id: user.user.id
           })
@@ -135,7 +115,6 @@ export const useProjects = () => {
         projectId = newProject.id;
       }
 
-      // Inserir tarefas
       if (projectData.tasks.length > 0) {
         const { error: tasksError } = await supabase
           .from('tasks')
@@ -151,7 +130,6 @@ export const useProjects = () => {
         if (tasksError) throw tasksError;
       }
 
-      // Inserir membros da equipe
       if (projectData.team.length > 0) {
         const { error: teamError } = await supabase
           .from('project_team_members')

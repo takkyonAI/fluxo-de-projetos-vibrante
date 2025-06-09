@@ -8,23 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, CheckCircle, Circle, AlertCircle } from 'lucide-react';
-
-interface Task {
-  id: string;
-  title: string;
-  status: 'todo' | 'in-progress' | 'completed';
-  assignee: string;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  dueDate: string;
-  tasks: Task[];
-  team: string[];
-}
+import { Task, Project } from '@/types/project';
 
 interface ProjectModalProps {
   open: boolean;
@@ -35,11 +19,11 @@ interface ProjectModalProps {
 }
 
 const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: ProjectModalProps) => {
-  // Resetar dados quando abrir modal para novo projeto
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     dueDate: '',
+    priority: 3,
     tasks: [] as Task[],
     team: [] as string[]
   });
@@ -49,7 +33,6 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
 
-  // Obter todos os membros únicos de todos os projetos
   const getAllUniqueMembers = () => {
     const allMembers = new Set<string>();
     allProjects.forEach(proj => {
@@ -60,27 +43,49 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
 
   const allUniqueMembers = getAllUniqueMembers();
 
-  // Atualizar dados quando project mudar
   React.useEffect(() => {
     if (project) {
       setFormData({
         title: project.title,
         description: project.description,
         dueDate: project.dueDate,
+        priority: project.priority || 3,
         tasks: project.tasks,
         team: project.team
       });
     } else {
-      // Limpar campos para novo projeto
       setFormData({
         title: '',
         description: '',
         dueDate: '',
+        priority: 3,
         tasks: [],
         team: []
       });
     }
   }, [project, open]);
+
+  const getPriorityIcon = (priority: number) => {
+    switch (priority) {
+      case 1: return '🔴';
+      case 2: return '🟠';
+      case 3: return '🟡';
+      case 4: return '🔵';
+      case 5: return '⚪';
+      default: return '🟡';
+    }
+  };
+
+  const getPriorityLabel = (priority: number) => {
+    switch (priority) {
+      case 1: return 'Muito Alta';
+      case 2: return 'Alta';
+      case 3: return 'Média';
+      case 4: return 'Baixa';
+      case 5: return 'Muito Baixa';
+      default: return 'Média';
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -143,12 +148,10 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
     });
   };
 
-  // Filtrar membros da equipe baseado no que o usuário está digitando
   const filteredTeamMembers = formData.team.filter(member =>
     member.toLowerCase().includes(newTask.assignee.toLowerCase())
   );
 
-  // Filtrar membros únicos baseado no que o usuário está digitando
   const filteredUniqueMembers = allUniqueMembers.filter(member =>
     member.toLowerCase().includes(newMember.toLowerCase()) && 
     !formData.team.includes(member)
@@ -172,7 +175,9 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
   const selectMember = (member: string) => {
     setNewMember(member);
     setShowMemberDropdown(false);
-    addTeamMember();
+    setTimeout(() => {
+      addTeamMember();
+    }, 0);
   };
 
   return (
@@ -209,15 +214,33 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
               />
             </div>
 
-            <div>
-              <Label htmlFor="dueDate">Data de Entrega</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                className="mt-1"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="dueDate">Data de Entrega</Label>
+                <Input
+                  id="dueDate"
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="priority">Prioridade</Label>
+                <Select value={formData.priority.toString()} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: parseInt(value) }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">🔴 Muito Alta (1)</SelectItem>
+                    <SelectItem value="2">🟠 Alta (2)</SelectItem>
+                    <SelectItem value="3">🟡 Média (3)</SelectItem>
+                    <SelectItem value="4">🔵 Baixa (4)</SelectItem>
+                    <SelectItem value="5">⚪ Muito Baixa (5)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>

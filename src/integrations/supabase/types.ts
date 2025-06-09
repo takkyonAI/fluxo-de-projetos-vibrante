@@ -71,6 +71,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          priority: number | null
           progress: number
           title: string
           updated_at: string
@@ -81,6 +82,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          priority?: number | null
           progress?: number
           title: string
           updated_at?: string
@@ -91,6 +93,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          priority?: number | null
           progress?: number
           title?: string
           updated_at?: string
