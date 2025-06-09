@@ -34,16 +34,39 @@ interface ProjectModalProps {
 }
 
 const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => {
+  // Resetar dados quando abrir modal para novo projeto
   const [formData, setFormData] = useState({
-    title: project?.title || '',
-    description: project?.description || '',
-    dueDate: project?.dueDate || '',
-    tasks: project?.tasks || [],
-    team: project?.team || []
+    title: '',
+    description: '',
+    dueDate: '',
+    tasks: [] as Task[],
+    team: [] as string[]
   });
 
   const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
   const [newMember, setNewMember] = useState('');
+
+  // Atualizar dados quando project mudar
+  React.useEffect(() => {
+    if (project) {
+      setFormData({
+        title: project.title,
+        description: project.description,
+        dueDate: project.dueDate,
+        tasks: project.tasks,
+        team: project.team
+      });
+    } else {
+      // Limpar campos para novo projeto
+      setFormData({
+        title: '',
+        description: '',
+        dueDate: '',
+        tasks: [],
+        team: []
+      });
+    }
+  }, [project, open]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -102,7 +125,6 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
       ...formData,
       progress
     });
-    onClose();
   };
 
   return (

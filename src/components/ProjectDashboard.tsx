@@ -1,5 +1,6 @@
+
 import React, { useState, useCallback } from 'react';
-import { Search, Plus, LayoutGrid, BarChart3, Moon, Sun } from 'lucide-react';
+import { Search, Plus, LayoutGrid, BarChart3, Moon, Sun, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,6 +8,9 @@ import ProjectCard from './ProjectCard';
 import ProjectTimeline from './ProjectTimeline';
 import ProjectModal from './ProjectModal';
 import DashboardStats from './DashboardStats';
+import { useProjects } from '@/hooks/useProjects';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Task {
   id: string;
@@ -27,13 +31,14 @@ interface Project {
 
 const ProjectDashboard = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
   const [view, setView] = useState('grid');
   const [sortBy, setSortBy] = useState('name');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  
+  const { projects, loading, saveProject, updateProject } = useProjects();
+  const { toast } = useToast();
 
   const filteredAndSortedProjects = projects
     .filter(project => 
@@ -74,9 +79,6 @@ const ProjectDashboard = () => {
     };
 
     console.log('Enviando notificação por email:', emailData);
-    
-    // Aqui você precisará integrar com Supabase para enviar emails
-    // Por enquanto, apenas logamos no console
     alert(`Email de notificação enviado para wade.venga@rockfeller.com.br sobre o projeto: ${project.title}`);
   };
 
@@ -91,29 +93,47 @@ const ProjectDashboard = () => {
   };
 
   const handleSaveProject = async (projectData: Omit<Project, 'id'>) => {
-    if (editingProject) {
-      const updatedProject = { ...projectData, id: editingProject.id };
-      setProjects(projects.map(p => 
-        p.id === editingProject.id ? updatedProject : p
-      ));
-      await sendNotificationEmail(updatedProject, 'updated');
-    } else {
-      const newProject: Project = {
-        ...projectData,
-        id: Date.now().toString()
-      };
-      setProjects([...projects, newProject]);
-      await sendNotificationEmail(newProject, 'created');
+    try {
+      await saveProject(projectData, editingProject || undefined);
+      
+      const action = editingProject ? 'updated' : 'created';
+      const projectForNotification = { 
+        ...projectData, 
+        id: editingProject?.id || 'new' 
+      } as Project;
+      
+      await sendNotificationEmail(projectForNotification, action);
+      
+      setIsModalOpen(false);
+      setEditingProject(null);
+    } catch (error) {
+      console.error('Erro ao salvar projeto:', error);
     }
-    setIsModalOpen(false);
-    setEditingProject(null);
   };
 
   const handleUpdateProject = async (updatedProject: Project) => {
-    setProjects(projects.map(p => 
-      p.id === updatedProject.id ? updatedProject : p
-    ));
-    await sendNotificationEmail(updatedProject, 'updated');
+    try {
+      await updateProject(updatedProject);
+      await sendNotificationEmail(updatedProject, 'updated');
+    } catch (error) {
+      console.error('Erro ao atualizar projeto:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso!"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer logout: " + error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const toggleDarkMode = () => {
@@ -129,6 +149,17 @@ const ProjectDashboard = () => {
     }
   }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando projetos...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
       {/* Header com faixa laranja */}
@@ -143,14 +174,24 @@ const ProjectDashboard = () => {
             />
             <h1 className="text-2xl font-bold text-white">Dashboard de Projetos Rockfeller</h1>
           </div>
-          <Button
-            onClick={toggleDarkMode}
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/20"
-          >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={toggleDarkMode}
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
