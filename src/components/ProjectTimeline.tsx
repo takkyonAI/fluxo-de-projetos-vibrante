@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { Calendar, Clock, User, CheckCircle, AlertCircle, Circle, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -172,7 +173,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                           {getStatusIcon(task.status)}
                           <span className="flex-1 truncate text-gray-700 dark:text-gray-300">{task.title}</span>
                           <Badge variant="outline" className="text-xs px-1 py-0 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/40 dark:to-blue-900/40 border-purple-200 dark:border-purple-600 text-purple-700 dark:text-purple-300">
-                            {task.assignee.split(' ')[0]}
+                            {task.assignees.length > 0 ? task.assignees[0].split(' ')[0] : 'N/A'}
                           </Badge>
                         </div>
                       ))}
@@ -199,7 +200,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
               </Card>
 
               {/* Timeline Bars */}
-              <div className="grid grid-cols-12 gap-1 items-center min-h-[80px]">
+              <div className="grid grid-cols-12 gap-1 items-center h-full min-h-[80px]">
                 {timelineData.map((month, monthIndex) => {
                   const monthDate = new Date(month.fullDate);
                   const projectDueDate = new Date(project.dueDate);
@@ -239,7 +240,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                           return (
                             <div
                               key={week}
-                              className={`h-6 border-l border-purple-100 dark:border-purple-800 transition-all duration-300 hover:scale-105 ${barClass}`}
+                              className={`h-full border-l border-purple-100 dark:border-purple-800 transition-all duration-300 hover:scale-105 ${barClass}`}
                             />
                           );
                         })}
@@ -257,7 +258,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                                   key={task.id}
                                   className={`absolute top-1 h-3 w-3 rounded-full ${getStatusColor(task.status)} border-2 border-white dark:border-gray-900 flex items-center justify-center transition-all duration-300 hover:scale-110`}
                                   style={{ left: `${weekPos * 25}%` }}
-                                  title={`${task.title} - ${task.assignee}`}
+                                  title={`${task.title} - ${task.assignees.join(', ')}`}
                                 >
                                   <div className="w-1 h-1 bg-white rounded-full"></div>
                                 </div>
