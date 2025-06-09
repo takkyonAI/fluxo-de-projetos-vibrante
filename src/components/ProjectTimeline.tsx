@@ -70,11 +70,11 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-gradient-to-r from-emerald-400 to-teal-400';
+        return 'bg-emerald-400';
       case 'in-progress':
-        return 'bg-gradient-to-r from-cyan-400 to-blue-500';
+        return 'bg-cyan-400';
       default:
-        return 'bg-gradient-to-r from-gray-300 to-gray-400';
+        return 'bg-gray-400';
     }
   };
 
@@ -103,19 +103,19 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
     <div className="space-y-6">
       {/* Timeline Header */}
       <div className="grid grid-cols-[300px_1fr] gap-4">
-        <div className="font-semibold text-gray-700 p-4">
-          <div className="text-sm text-purple-600 mb-2 font-bold">PROJETO</div>
+        <div className="font-semibold text-gray-700 dark:text-gray-300 p-4">
+          <div className="text-sm text-purple-600 dark:text-purple-400 mb-2 font-bold">PROJETO</div>
           <div className="text-xs text-gray-400">Progresso | Início | Término</div>
         </div>
         <div className="grid grid-cols-12 gap-1">
           {timelineData.map((month) => (
             <div key={month.key} className="text-center">
-              <div className="text-xs font-medium text-purple-700 p-2 border-l border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
+              <div className="text-xs font-medium text-purple-700 dark:text-purple-300 p-2 border-l border-purple-200 dark:border-purple-700 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
                 {month.label}
               </div>
               <div className="grid grid-cols-4 gap-px">
                 {[1, 2, 3, 4].map((week) => (
-                  <div key={week} className="text-xs text-gray-400 p-1 border-l border-purple-100 bg-purple-50/30">
+                  <div key={week} className="text-xs text-gray-400 p-1 border-l border-purple-100 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-900/10">
                     w{week}
                   </div>
                 ))}
@@ -136,42 +136,42 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
           return (
             <div key={project.id} className="grid grid-cols-[300px_1fr] gap-4 group">
               {/* Project Info - Compact or Expanded */}
-              <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border border-purple-200/50">
+              <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/90 via-purple-50/30 to-blue-50/30 dark:from-gray-900/90 dark:via-purple-900/20 dark:to-blue-900/20 border border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div 
                     className="flex items-center justify-between"
                     onClick={() => toggleProjectExpansion(project.id)}
                   >
-                    <CardTitle className="text-sm font-medium text-gray-800 group-hover:text-purple-600 flex-1">
+                    <CardTitle className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 flex-1">
                       {project.title}
                     </CardTitle>
                     {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-purple-600" />
+                      <ChevronDown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-purple-600" />
+                      <ChevronRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     )}
                   </div>
                   
                   {/* Status always visible */}
                   <div className="flex items-center justify-between text-xs">
-                    <Badge variant="outline" className="text-xs bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 text-purple-700">
+                    <Badge variant="outline" className="text-xs bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/40 dark:to-blue-900/40 border-purple-200 dark:border-purple-600 text-purple-700 dark:text-purple-300">
                       {getProjectStatus(project.progress)}
                     </Badge>
-                    <span className="text-purple-600 font-bold">{project.progress}%</span>
+                    <span className="text-purple-600 dark:text-purple-400 font-bold">{project.progress}%</span>
                   </div>
                 </CardHeader>
                 
                 {/* Expanded Content */}
                 {isExpanded && (
                   <CardContent className="space-y-2 animate-fade-in">
-                    <p className="text-xs text-gray-600">{project.description}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{project.description}</p>
                     
                     <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1 text-gray-500">
+                      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                         <Calendar className="w-3 h-3 text-cyan-500" />
                         <span>{new Date(startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-500">
+                      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                         <Clock className="w-3 h-3 text-pink-500" />
                         <span>{new Date(project.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
                       </div>
@@ -181,26 +181,26 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                       {project.tasks.slice(0, 3).map((task) => (
                         <div key={task.id} className="flex items-center gap-2 text-xs">
                           {getStatusIcon(task.status)}
-                          <span className="flex-1 truncate">{task.title}</span>
-                          <Badge variant="outline" className="text-xs px-1 py-0 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                          <span className="flex-1 truncate text-gray-700 dark:text-gray-300">{task.title}</span>
+                          <Badge variant="outline" className="text-xs px-1 py-0 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/40 dark:to-blue-900/40 border-purple-200 dark:border-purple-600 text-purple-700 dark:text-purple-300">
                             {task.assignee.split(' ')[0]}
                           </Badge>
                         </div>
                       ))}
                       {project.tasks.length > 3 && (
-                        <div className="text-xs text-purple-500 font-medium">
+                        <div className="text-xs text-purple-500 dark:text-purple-400 font-medium">
                           +{project.tasks.length - 3} mais tarefas
                         </div>
                       )}
                     </div>
 
-                    <div className="pt-2 border-t border-purple-100">
+                    <div className="pt-2 border-t border-purple-100 dark:border-purple-800">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onEditProject(project);
                         }}
-                        className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                        className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium"
                       >
                         Editar Projeto
                       </button>
@@ -212,7 +212,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
               {/* Timeline Bars */}
               <div className="grid grid-cols-12 gap-1 items-center min-h-[80px]">
                 {timelineData.map((month, monthIndex) => (
-                  <div key={month.key} className="relative h-full border-l border-purple-200">
+                  <div key={month.key} className="relative h-full border-l border-purple-200 dark:border-purple-700">
                     <div className="grid grid-cols-4 gap-px h-full">
                       {[1, 2, 3, 4].map((week, weekIndex) => {
                         const weekStart = monthIndex * 4 + weekIndex;
@@ -226,18 +226,18 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                         let barClass = '';
                         if (isInProject) {
                           if (isCompleted) {
-                            barClass = 'bg-gradient-to-r from-emerald-400 to-teal-500 shadow-lg shadow-emerald-200';
+                            barClass = 'bg-emerald-400';
                           } else if (weekStart < projectStart + progressWeeks + 2) {
-                            barClass = 'bg-gradient-to-r from-cyan-400 to-blue-500 shadow-lg shadow-cyan-200';
+                            barClass = 'bg-cyan-400';
                           } else {
-                            barClass = 'bg-gradient-to-r from-gray-300 to-gray-400 shadow-sm';
+                            barClass = 'bg-gray-400';
                           }
                         }
                         
                         return (
                           <div
                             key={week}
-                            className={`h-6 border-l border-purple-100 transition-all duration-300 hover:scale-105 ${barClass}`}
+                            className={`h-6 border-l border-purple-100 dark:border-purple-800 transition-all duration-300 hover:scale-105 ${barClass}`}
                           />
                         );
                       })}
@@ -253,7 +253,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                             return (
                               <div
                                 key={task.id}
-                                className={`absolute top-1 h-3 w-3 rounded-full ${getStatusColor(task.status)} border-2 border-white flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110`}
+                                className={`absolute top-1 h-3 w-3 rounded-full ${getStatusColor(task.status)} border-2 border-white dark:border-gray-900 flex items-center justify-center transition-all duration-300 hover:scale-110`}
                                 style={{ left: `${weekPos * 25}%` }}
                                 title={`${task.title} - ${task.assignee}`}
                               >
@@ -274,17 +274,17 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-6 text-xs text-gray-600 pt-4 border-t border-purple-200">
+      <div className="flex items-center gap-6 text-xs text-gray-600 dark:text-gray-400 pt-4 border-t border-purple-200 dark:border-purple-700">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-teal-500 rounded shadow-lg"></div>
-          <span className="text-emerald-600 font-medium">Concluído</span>
+          <div className="w-4 h-4 bg-emerald-400 rounded"></div>
+          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Concluído</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded shadow-lg"></div>
-          <span className="text-cyan-600 font-medium">Em progresso</span>
+          <div className="w-4 h-4 bg-cyan-400 rounded"></div>
+          <span className="text-cyan-600 dark:text-cyan-400 font-medium">Em progresso</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded"></div>
+          <div className="w-4 h-4 bg-gray-400 rounded"></div>
           <span className="text-gray-500 font-medium">Planejado</span>
         </div>
       </div>
