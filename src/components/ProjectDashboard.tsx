@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Search } from 'lucide-react';
+import { Plus, Filter, Search, FolderOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProjectCard from './ProjectCard';
 import ProjectModal from './ProjectModal';
 import DashboardStats from './DashboardStats';
+import ProjectTimeline from './ProjectTimeline';
 
 interface Task {
   id: string;
@@ -62,6 +62,7 @@ const ProjectDashboard = () => {
   const [selectedProject, setSelectedProject] = useState<Project | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [viewMode, setViewMode] = useState<'cards' | 'timeline'>('cards');
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -107,7 +108,25 @@ const ProjectDashboard = () => {
 
         <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">Meus Projetos</h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-semibold text-gray-800">Meus Projetos</h2>
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === 'cards' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('cards')}
+                >
+                  Cards
+                </Button>
+                <Button
+                  variant={viewMode === 'timeline' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('timeline')}
+                >
+                  Timeline
+                </Button>
+              </div>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
               <div className="relative">
@@ -146,42 +165,46 @@ const ProjectDashboard = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={() => handleEditProject(project)}
-              />
-            ))}
-            
-            {filteredProjects.length === 0 && (
-              <div className="col-span-full text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <FolderOpen className="w-16 h-16 mx-auto" />
+          {viewMode === 'cards' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onClick={() => handleEditProject(project)}
+                />
+              ))}
+              
+              {filteredProjects.length === 0 && (
+                <div className="col-span-full text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <FolderOpen className="w-16 h-16 mx-auto" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-500 mb-2">
+                    Nenhum projeto encontrado
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    {searchTerm || filterStatus !== 'all' 
+                      ? 'Tente ajustar os filtros de busca'
+                      : 'Comece criando seu primeiro projeto'
+                    }
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setSelectedProject(undefined);
+                      setModalOpen(true);
+                    }}
+                    variant="outline"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar Primeiro Projeto
+                  </Button>
                 </div>
-                <h3 className="text-lg font-medium text-gray-500 mb-2">
-                  Nenhum projeto encontrado
-                </h3>
-                <p className="text-gray-400 mb-4">
-                  {searchTerm || filterStatus !== 'all' 
-                    ? 'Tente ajustar os filtros de busca'
-                    : 'Comece criando seu primeiro projeto'
-                  }
-                </p>
-                <Button 
-                  onClick={() => {
-                    setSelectedProject(undefined);
-                    setModalOpen(true);
-                  }}
-                  variant="outline"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Criar Primeiro Projeto
-                </Button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <ProjectTimeline projects={filteredProjects} onEditProject={handleEditProject} />
+          )}
         </div>
 
         <ProjectModal
