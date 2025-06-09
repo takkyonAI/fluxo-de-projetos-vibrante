@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import ProjectCard from './ProjectCard';
 import ProjectModal from './ProjectModal';
 import DashboardStats from './DashboardStats';
-import DraggableProjectTimeline from './DraggableProjectTimeline';
 import ProjectFilters from './ProjectFilters';
 import { useProjects } from '@/hooks/useProjects';
 import useProjectFilters from '@/hooks/useProjectFilters';
@@ -51,11 +50,6 @@ const ProjectDashboard = () => {
     setIsModalOpen(true);
   };
 
-  const handleReorderProjects = (reorderedProjects: Project[]) => {
-    // Here we could implement saving the new order to the backend if needed
-    console.log('Projects reordered:', reorderedProjects);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -75,7 +69,7 @@ const ProjectDashboard = () => {
             <img 
               src="/lovable-uploads/1f1774f4-553f-4b8e-8142-308bd1e09925.png" 
               alt="Rockfeller Logo" 
-              className="h-12 w-auto"
+              className="h-8 w-auto"
             />
             <h1 className="text-3xl font-bold text-white">
               Dashboard de Projetos Rockfeller
@@ -95,12 +89,6 @@ const ProjectDashboard = () => {
           filters={filters}
           onFiltersChange={setFilters}
           projects={projects}
-        />
-        
-        <DraggableProjectTimeline 
-          projects={filteredProjects} 
-          onEditProject={handleEditProject}
-          onReorder={handleReorderProjects}
         />
 
         <div className="mb-8">
