@@ -4,6 +4,7 @@ export interface Task {
   title: string;
   status: 'todo' | 'in-progress' | 'completed';
   assignees: string[];
+  assignee: string; // Mantendo para compatibilidade com o banco
   dueDate?: string; // Nova propriedade para prazo final da tarefa
 }
 

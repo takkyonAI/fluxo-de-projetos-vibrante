@@ -52,6 +52,7 @@ export const useProjects = () => {
           title: task.title,
           status: task.status as 'todo' | 'in-progress' | 'completed',
           assignees: task.assignee ? task.assignee.split(',').map((a: string) => a.trim()) : [],
+          assignee: task.assignee || '', // Mantendo para compatibilidade
           dueDate: task.due_date || undefined
         })) || [],
         team: teamData?.filter(member => member.project_id === project.id).map(member => member.member_name) || []
