@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import ProjectCard from './ProjectCard';
 import ProjectModal from './ProjectModal';
 import DashboardStats from './DashboardStats';
-import ProjectTimeline from './ProjectTimeline';
+import DraggableProjectTimeline from './DraggableProjectTimeline';
 import ProjectFilters from './ProjectFilters';
 import { useProjects } from '@/hooks/useProjects';
 import useProjectFilters from '@/hooks/useProjectFilters';
@@ -16,7 +16,7 @@ import { Project } from '@/types/project';
 const ProjectDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const { projects, loading, saveProject } = useProjects();
+  const { projects, loading, saveProject, updateProject } = useProjects();
   const { filters, setFilters, filteredProjects } = useProjectFilters(projects);
   const { toast } = useToast();
 
@@ -51,6 +51,11 @@ const ProjectDashboard = () => {
     setIsModalOpen(true);
   };
 
+  const handleReorderProjects = (reorderedProjects: Project[]) => {
+    // Here we could implement saving the new order to the backend if needed
+    console.log('Projects reordered:', reorderedProjects);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -64,12 +69,19 @@ const ProjectDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+      <header className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 shadow-lg">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Dashboard de Projetos
-          </h1>
-          <Button variant="outline" onClick={handleLogout}>
+          <div className="flex items-center gap-4">
+            <img 
+              src="/lovable-uploads/1f1774f4-553f-4b8e-8142-308bd1e09925.png" 
+              alt="Rockfeller Logo" 
+              className="h-12 w-auto"
+            />
+            <h1 className="text-3xl font-bold text-white">
+              Dashboard de Projetos Rockfeller
+            </h1>
+          </div>
+          <Button variant="outline" onClick={handleLogout} className="bg-white/10 border-white/20 text-white hover:bg-white/20">
             <LogOut className="w-4 h-4 mr-2" />
             Logout
           </Button>
@@ -85,7 +97,11 @@ const ProjectDashboard = () => {
           projects={projects}
         />
         
-        <ProjectTimeline projects={filteredProjects} onEditProject={handleEditProject} />
+        <DraggableProjectTimeline 
+          projects={filteredProjects} 
+          onEditProject={handleEditProject}
+          onReorder={handleReorderProjects}
+        />
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
@@ -123,6 +139,7 @@ const ProjectDashboard = () => {
                   key={project.id}
                   project={project}
                   onEdit={handleEditProject}
+                  onUpdateProject={updateProject}
                 />
               ))}
             </div>

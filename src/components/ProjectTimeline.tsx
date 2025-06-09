@@ -3,23 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Calendar, Clock, User, CheckCircle, AlertCircle, Circle, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-interface Task {
-  id: string;
-  title: string;
-  status: 'todo' | 'in-progress' | 'completed';
-  assignee: string;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  dueDate: string;
-  tasks: Task[];
-  team: string[];
-}
+import { Project } from '@/types/project';
 
 interface ProjectTimelineProps {
   projects: Project[];
@@ -84,18 +68,24 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
     return 'Não Iniciado';
   };
 
-  const getProjectPosition = (project: Project) => {
+  const getProjectTimelineData = (project: Project) => {
+    const today = new Date();
     const dueDate = new Date(project.dueDate);
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 2);
+    startDate.setMonth(startDate.getMonth() - 1); // Start 1 month ago
     
-    const duration = 6;
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + duration);
-
+    // Calculate project duration in weeks from start to due date
+    const projectDurationWeeks = Math.ceil((dueDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const maxDurationWeeks = Math.min(projectDurationWeeks, 48); // Max 12 months (48 weeks)
+    
+    // Calculate weeks from current date
+    const weeksFromStart = Math.floor((startDate.getTime() - new Date().getTime()) / (7 * 24 * 60 * 60 * 1000)) + 4;
+    
     return {
-      start: Math.max(0, Math.min(11, Math.floor((startDate.getTime() - new Date().getTime()) / (30 * 24 * 60 * 60 * 1000)) + 2)),
-      duration: Math.min(6, Math.max(1, duration))
+      start: Math.max(0, weeksFromStart),
+      duration: Math.max(1, maxDurationWeeks),
+      dueDate,
+      today
     };
   };
 
@@ -128,14 +118,12 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
       {/* Projects Timeline */}
       <div className="space-y-4">
         {projects.map((project) => {
-          const projectPos = getProjectPosition(project);
-          const startDate = new Date(project.dueDate);
-          startDate.setMonth(startDate.getMonth() - 3);
+          const projectTimeline = getProjectTimelineData(project);
           const isExpanded = expandedProjects.has(project.id);
           
           return (
             <div key={project.id} className="grid grid-cols-[300px_1fr] gap-4 group">
-              {/* Project Info - Compact or Expanded */}
+              {/* Project Info */}
               <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/90 via-purple-50/30 to-blue-50/30 dark:from-gray-900/90 dark:via-purple-900/20 dark:to-blue-900/20 border border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div 
@@ -152,7 +140,6 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                     )}
                   </div>
                   
-                  {/* Status always visible */}
                   <div className="flex items-center justify-between text-xs">
                     <Badge variant="outline" className="text-xs bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/40 dark:to-blue-900/40 border-purple-200 dark:border-purple-600 text-purple-700 dark:text-purple-300">
                       {getProjectStatus(project.progress)}
@@ -161,7 +148,6 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                   </div>
                 </CardHeader>
                 
-                {/* Expanded Content */}
                 {isExpanded && (
                   <CardContent className="space-y-2 animate-fade-in">
                     <p className="text-xs text-gray-600 dark:text-gray-400">{project.description}</p>
@@ -169,7 +155,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                         <Calendar className="w-3 h-3 text-cyan-500" />
-                        <span>{new Date(startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
+                        <span>{new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                         <Clock className="w-3 h-3 text-pink-500" />
@@ -209,64 +195,88 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                 )}
               </Card>
 
-              {/* Timeline Bars */}
+              {/* Timeline Bars - Only until project due date */}
               <div className="grid grid-cols-12 gap-1 items-center min-h-[80px]">
-                {timelineData.map((month, monthIndex) => (
-                  <div key={month.key} className="relative h-full border-l border-purple-200 dark:border-purple-700">
-                    <div className="grid grid-cols-4 gap-px h-full">
-                      {[1, 2, 3, 4].map((week, weekIndex) => {
-                        const weekStart = monthIndex * 4 + weekIndex;
-                        const projectStart = Math.floor(projectPos.start * 4);
-                        const projectEnd = projectStart + (projectPos.duration * 4);
-                        
-                        const isInProject = weekStart >= projectStart && weekStart < projectEnd;
-                        const progressWeeks = Math.floor((project.progress / 100) * (projectPos.duration * 4));
-                        const isCompleted = weekStart < projectStart + progressWeeks;
-                        
-                        let barClass = '';
-                        if (isInProject) {
-                          if (isCompleted) {
-                            barClass = 'bg-emerald-400';
-                          } else if (weekStart < projectStart + progressWeeks + 2) {
-                            barClass = 'bg-cyan-400';
-                          } else {
-                            barClass = 'bg-gray-400';
+                {timelineData.map((month, monthIndex) => {
+                  const monthDate = new Date(month.fullDate);
+                  const projectDueDate = new Date(project.dueDate);
+                  
+                  // Don't show timeline blocks after project due date
+                  if (monthDate > projectDueDate) {
+                    return (
+                      <div key={month.key} className="relative h-full border-l border-purple-200 dark:border-purple-700">
+                        <div className="grid grid-cols-4 gap-px h-full">
+                          {[1, 2, 3, 4].map((week) => (
+                            <div key={week} className="h-6 border-l border-purple-100 dark:border-purple-800" />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={month.key} className="relative h-full border-l border-purple-200 dark:border-purple-700">
+                      <div className="grid grid-cols-4 gap-px h-full">
+                        {[1, 2, 3, 4].map((week, weekIndex) => {
+                          const weekStart = monthIndex * 4 + weekIndex;
+                          const projectStart = Math.floor(projectTimeline.start);
+                          const projectEnd = projectStart + Math.floor(projectTimeline.duration / 4);
+                          
+                          const isInProject = weekStart >= projectStart && weekStart < projectEnd;
+                          const progressWeeks = Math.floor((project.progress / 100) * projectTimeline.duration);
+                          const isCompleted = weekStart < projectStart + Math.floor(progressWeeks / 4);
+                          
+                          // Check if this week is after today for in-progress tasks
+                          const weekDate = new Date(monthDate);
+                          weekDate.setDate(weekDate.getDate() + (weekIndex * 7));
+                          const today = new Date();
+                          const isAfterToday = weekDate > today;
+                          
+                          let barClass = '';
+                          if (isInProject) {
+                            if (isCompleted) {
+                              barClass = 'bg-emerald-400'; // Completed tasks in green
+                            } else if (weekStart < projectStart + Math.floor(progressWeeks / 4) + 2 && !isAfterToday) {
+                              barClass = 'bg-cyan-400'; // In progress, but not after today
+                            } else {
+                              barClass = 'bg-gray-400'; // Planned
+                            }
                           }
-                        }
-                        
-                        return (
-                          <div
-                            key={week}
-                            className={`h-6 border-l border-purple-100 dark:border-purple-800 transition-all duration-300 hover:scale-105 ${barClass}`}
-                          />
-                        );
-                      })}
-                    </div>
-                    
-                    {/* Task indicators - only show if expanded or limited view */}
-                    {(isExpanded || !isExpanded) && (
-                      <div className="absolute top-0 left-0 w-full h-full">
-                        {project.tasks.slice(0, isExpanded ? project.tasks.length : 2).map((task, taskIndex) => {
-                          const taskWeek = projectPos.start * 4 + (taskIndex * 2);
-                          if (Math.floor(taskWeek / 4) === monthIndex) {
-                            const weekPos = taskWeek % 4;
-                            return (
-                              <div
-                                key={task.id}
-                                className={`absolute top-1 h-3 w-3 rounded-full ${getStatusColor(task.status)} border-2 border-white dark:border-gray-900 flex items-center justify-center transition-all duration-300 hover:scale-110`}
-                                style={{ left: `${weekPos * 25}%` }}
-                                title={`${task.title} - ${task.assignee}`}
-                              >
-                                <div className="w-1 h-1 bg-white rounded-full"></div>
-                              </div>
-                            );
-                          }
-                          return null;
+                          
+                          return (
+                            <div
+                              key={week}
+                              className={`h-6 border-l border-purple-100 dark:border-purple-800 transition-all duration-300 hover:scale-105 ${barClass}`}
+                            />
+                          );
                         })}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      
+                      {/* Task indicators */}
+                      {(isExpanded || !isExpanded) && (
+                        <div className="absolute top-0 left-0 w-full h-full">
+                          {project.tasks.slice(0, isExpanded ? project.tasks.length : 2).map((task, taskIndex) => {
+                            const taskWeek = projectTimeline.start + (taskIndex * 2);
+                            if (Math.floor(taskWeek / 4) === monthIndex) {
+                              const weekPos = taskWeek % 4;
+                              return (
+                                <div
+                                  key={task.id}
+                                  className={`absolute top-1 h-3 w-3 rounded-full ${getStatusColor(task.status)} border-2 border-white dark:border-gray-900 flex items-center justify-center transition-all duration-300 hover:scale-110`}
+                                  style={{ left: `${weekPos * 25}%` }}
+                                  title={`${task.title} - ${task.assignee}`}
+                                >
+                                  <div className="w-1 h-1 bg-white rounded-full"></div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
