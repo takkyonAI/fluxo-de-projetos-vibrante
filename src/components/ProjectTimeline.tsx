@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Calendar, Clock, User, CheckCircle, AlertCircle, Circle, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -71,20 +70,24 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
   const getProjectTimelineData = (project: Project) => {
     const today = new Date();
     const dueDate = new Date(project.dueDate);
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 1); // Start 1 month ago
     
-    // Calculate project duration in weeks from start to due date
-    const projectDurationWeeks = Math.ceil((dueDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-    const maxDurationWeeks = Math.min(projectDurationWeeks, 48); // Max 12 months (48 weeks)
+    // Calculate start date (today or a bit before for visualization)
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 7); // Start 1 week ago for better visualization
     
-    // Calculate weeks from current date
-    const weeksFromStart = Math.floor((startDate.getTime() - new Date().getTime()) / (7 * 24 * 60 * 60 * 1000)) + 4;
+    // Calculate total duration in weeks from start to due date
+    const totalDurationMs = dueDate.getTime() - startDate.getTime();
+    const totalWeeks = Math.ceil(totalDurationMs / (7 * 24 * 60 * 60 * 1000));
+    
+    // Calculate weeks from current timeline start
+    const timelineStart = new Date();
+    const weeksFromTimelineStart = Math.floor((startDate.getTime() - timelineStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
     
     return {
-      start: Math.max(0, weeksFromStart),
-      duration: Math.max(1, maxDurationWeeks),
+      start: Math.max(0, weeksFromTimelineStart + 4), // Adjust for current position
+      duration: Math.max(1, Math.min(totalWeeks, 48)), // Max 12 months
       dueDate,
+      startDate,
       today
     };
   };
@@ -106,7 +109,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
               <div className="grid grid-cols-4 gap-px">
                 {[1, 2, 3, 4].map((week) => (
                   <div key={week} className="text-xs text-gray-400 p-1 border-l border-purple-100 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-900/10">
-                    w{week}
+                    {week}
                   </div>
                 ))}
               </div>
@@ -195,52 +198,42 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                 )}
               </Card>
 
-              {/* Timeline Bars - Only until project due date */}
+              {/* Timeline Bars */}
               <div className="grid grid-cols-12 gap-1 items-center min-h-[80px]">
                 {timelineData.map((month, monthIndex) => {
                   const monthDate = new Date(month.fullDate);
                   const projectDueDate = new Date(project.dueDate);
+                  const projectStartDate = projectTimeline.startDate;
                   
-                  // Don't show timeline blocks after project due date
-                  if (monthDate > projectDueDate) {
-                    return (
-                      <div key={month.key} className="relative h-full border-l border-purple-200 dark:border-purple-700">
-                        <div className="grid grid-cols-4 gap-px h-full">
-                          {[1, 2, 3, 4].map((week) => (
-                            <div key={week} className="h-6 border-l border-purple-100 dark:border-purple-800" />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-
                   return (
                     <div key={month.key} className="relative h-full border-l border-purple-200 dark:border-purple-700">
                       <div className="grid grid-cols-4 gap-px h-full">
                         {[1, 2, 3, 4].map((week, weekIndex) => {
                           const weekStart = monthIndex * 4 + weekIndex;
-                          const projectStart = Math.floor(projectTimeline.start);
-                          const projectEnd = projectStart + Math.floor(projectTimeline.duration / 4);
                           
-                          const isInProject = weekStart >= projectStart && weekStart < projectEnd;
-                          const progressWeeks = Math.floor((project.progress / 100) * projectTimeline.duration);
-                          const isCompleted = weekStart < projectStart + Math.floor(progressWeeks / 4);
-                          
-                          // Check if this week is after today for in-progress tasks
+                          // Calculate the actual week date
                           const weekDate = new Date(monthDate);
                           weekDate.setDate(weekDate.getDate() + (weekIndex * 7));
-                          const today = new Date();
-                          const isAfterToday = weekDate > today;
+                          
+                          // Check if this week is within project timeline
+                          const isWithinProject = weekDate >= projectStartDate && weekDate <= projectDueDate;
+                          
+                          // Calculate progress
+                          const totalProjectWeeks = Math.ceil((projectDueDate.getTime() - projectStartDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+                          const progressWeeks = Math.floor((project.progress / 100) * totalProjectWeeks);
+                          const weeksFromStart = Math.floor((weekDate.getTime() - projectStartDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+                          
+                          const isCompleted = isWithinProject && weeksFromStart < progressWeeks;
+                          const isInProgress = isWithinProject && weeksFromStart >= progressWeeks && weekDate <= new Date();
+                          const isPlanned = isWithinProject && weekDate > new Date();
                           
                           let barClass = '';
-                          if (isInProject) {
-                            if (isCompleted) {
-                              barClass = 'bg-emerald-400'; // Completed tasks in green
-                            } else if (weekStart < projectStart + Math.floor(progressWeeks / 4) + 2 && !isAfterToday) {
-                              barClass = 'bg-cyan-400'; // In progress, but not after today
-                            } else {
-                              barClass = 'bg-gray-400'; // Planned
-                            }
+                          if (isCompleted) {
+                            barClass = 'bg-emerald-400';
+                          } else if (isInProgress) {
+                            barClass = 'bg-cyan-400';
+                          } else if (isPlanned) {
+                            barClass = 'bg-gray-400';
                           }
                           
                           return (
