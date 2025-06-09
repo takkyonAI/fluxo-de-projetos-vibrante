@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Clock, Users, CheckCircle, Circle, AlertCircle, Plus, Edit3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -8,31 +7,15 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Task {
-  id: string;
-  title: string;
-  status: 'todo' | 'in-progress' | 'completed';
-  assignee: string;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  dueDate: string;
-  tasks: Task[];
-  team: string[];
-}
+import { Project } from '@/types/project';
 
 interface ProjectCardProps {
   project: Project;
-  onClick: () => void;
+  onEdit: (project: Project) => void;
   onUpdateProject?: (project: Project) => void;
 }
 
-const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) => {
+const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => {
   const [isManagingTasks, setIsManagingTasks] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
   const [localProject, setLocalProject] = useState(project);
@@ -96,7 +79,7 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
         <div className="flex justify-between items-start">
           <CardTitle 
             className="text-lg font-semibold text-gray-800 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors cursor-pointer"
-            onClick={onClick}
+            onClick={() => onEdit(localProject)}
           >
             {localProject.title}
           </CardTitle>
@@ -117,11 +100,11 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
             </Button>
           </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2" onClick={onClick}>{localProject.description}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2" onClick={() => onEdit(localProject)}>{localProject.description}</p>
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="space-y-2" onClick={onClick}>
+        <div className="space-y-2" onClick={() => onEdit(localProject)}>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-400">Progresso</span>
             <span className="font-medium text-purple-700 dark:text-purple-300">{completedTasks}/{totalTasks} tarefas</span>
@@ -191,7 +174,7 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
           </div>
         )}
         
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700" onClick={onClick}>
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700" onClick={() => onEdit(localProject)}>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-gray-400" />
             <span className="text-sm text-gray-600 dark:text-gray-300">{localProject.dueDate}</span>
@@ -222,4 +205,3 @@ const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) =>
 };
 
 export default ProjectCard;
-
