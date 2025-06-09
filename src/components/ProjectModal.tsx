@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, X, CheckCircle, Circle, AlertCircle, ChevronDown, Users } from 'lucide-react';
 import { Task, Project } from '@/types/project';
 
@@ -31,10 +32,10 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
     team: [] as string[]
   });
 
-  const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
+  const [newTask, setNewTask] = useState({ title: '', assignees: [] as string[], status: 'todo' as const });
   const [newMember, setNewMember] = useState('');
-  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
+  const [taskAssigneeDropdownOpen, setTaskAssigneeDropdownOpen] = useState(false);
 
   const getAllUniqueMembers = () => {
     const allMembers = new Set<string>();
@@ -102,7 +103,7 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
   };
 
   const addTask = () => {
-    if (newTask.title && newTask.assignee) {
+    if (newTask.title && newTask.assignees.length > 0) {
       const task = {
         id: Date.now().toString(),
         ...newTask
@@ -111,8 +112,8 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
         ...prev,
         tasks: [...prev.tasks, task]
       }));
-      setNewTask({ title: '', assignee: '', status: 'todo' });
-      setShowAssigneeDropdown(false);
+      setNewTask({ title: '', assignees: [], status: 'todo' });
+      setTaskAssigneeDropdownOpen(false);
     }
   };
 
@@ -142,10 +143,26 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
     }));
   };
 
+  const toggleTaskAssignee = (member: string) => {
+    setNewTask(prev => ({
+      ...prev,
+      assignees: prev.assignees.includes(member)
+        ? prev.assignees.filter(m => m !== member)
+        : [...prev.assignees, member]
+    }));
+  };
+
   const removeMember = (member: string) => {
     setFormData(prev => ({
       ...prev,
       team: prev.team.filter(m => m !== member)
+    }));
+  };
+
+  const removeTaskAssignee = (member: string) => {
+    setNewTask(prev => ({
+      ...prev,
+      assignees: prev.assignees.filter(m => m !== member)
     }));
   };
 
@@ -157,20 +174,6 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
       ...formData,
       progress
     });
-  };
-
-  const filteredTeamMembers = formData.team.filter(member =>
-    member.toLowerCase().includes(newTask.assignee.toLowerCase())
-  );
-
-  const handleAssigneeChange = (value: string) => {
-    setNewTask(prev => ({ ...prev, assignee: value }));
-    setShowAssigneeDropdown(value.length > 0 && filteredTeamMembers.length > 0);
-  };
-
-  const selectAssignee = (member: string) => {
-    setNewTask(prev => ({ ...prev, assignee: member }));
-    setShowAssigneeDropdown(false);
   };
 
   return (
@@ -269,15 +272,17 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
                           <CommandList>
                             <CommandEmpty>Nenhum membro encontrado.</CommandEmpty>
                             <CommandGroup>
-                              {allUniqueMembers.map((member) => (
-                                <CommandItem key={member} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={formData.team.includes(member)}
-                                    onCheckedChange={() => toggleTeamMember(member)}
-                                  />
-                                  <span className="flex-1">{member}</span>
-                                </CommandItem>
-                              ))}
+                              <ScrollArea className="h-40">
+                                {allUniqueMembers.map((member) => (
+                                  <CommandItem key={member} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={formData.team.includes(member)}
+                                      onCheckedChange={() => toggleTeamMember(member)}
+                                    />
+                                    <span className="flex-1">{member}</span>
+                                  </CommandItem>
+                                ))}
+                              </ScrollArea>
                             </CommandGroup>
                           </CommandList>
                         </Command>
@@ -310,34 +315,49 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
               <div className="space-y-2 mt-2">
                 <div className="grid grid-cols-12 gap-2">
                   <Input
-                    className="col-span-5"
+                    className="col-span-4"
                     value={newTask.title}
                     onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="Título da tarefa"
                   />
-                  <div className="col-span-4 relative">
-                    <Input
-                      value={newTask.assignee}
-                      onChange={(e) => handleAssigneeChange(e.target.value)}
-                      placeholder="Responsável"
-                      onFocus={() => setShowAssigneeDropdown(newTask.assignee.length > 0 && filteredTeamMembers.length > 0)}
-                    />
-                    {showAssigneeDropdown && filteredTeamMembers.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
-                        {filteredTeamMembers.map((member) => (
-                          <div
-                            key={member}
-                            className="px-3 py-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() => selectAssignee(member)}
-                          >
-                            {member}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div className="col-span-4">
+                    <Popover open={taskAssigneeDropdownOpen} onOpenChange={setTaskAssigneeDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between text-sm">
+                          <span className="truncate">
+                            {newTask.assignees.length === 0 
+                              ? 'Selecionar responsáveis' 
+                              : `${newTask.assignees.length} selecionado${newTask.assignees.length > 1 ? 's' : ''}`
+                            }
+                          </span>
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar membros..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhum membro encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              <ScrollArea className="h-32">
+                                {formData.team.map((member) => (
+                                  <CommandItem key={member} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={newTask.assignees.includes(member)}
+                                      onCheckedChange={() => toggleTaskAssignee(member)}
+                                    />
+                                    <span className="flex-1">{member}</span>
+                                  </CommandItem>
+                                ))}
+                              </ScrollArea>
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <Select value={newTask.status} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger className="col-span-2">
+                    <SelectTrigger className="col-span-3">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -350,6 +370,17 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
+
+                {newTask.assignees.length > 0 && (
+                  <div className="flex flex-wrap gap-1 px-2">
+                    {newTask.assignees.map((assignee) => (
+                      <Badge key={assignee} variant="outline" className="text-xs flex items-center gap-1">
+                        {assignee}
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => removeTaskAssignee(assignee)} />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 mt-4 max-h-60 overflow-y-auto">
@@ -359,7 +390,13 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
                       {getStatusIcon(task.status)}
                       <div>
                         <p className="font-medium text-sm">{task.title}</p>
-                        <p className="text-xs text-gray-600">Responsável: {task.assignee}</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {task.assignees.map((assignee) => (
+                            <Badge key={assignee} variant="outline" className="text-xs">
+                              {assignee}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => removeTask(task.id)}>

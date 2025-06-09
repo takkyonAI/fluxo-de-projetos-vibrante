@@ -1,9 +1,8 @@
-
 export interface Task {
   id: string;
   title: string;
   status: 'todo' | 'in-progress' | 'completed';
-  assignee: string;
+  assignees: string[]; // Changed from assignee to assignees array
 }
 
 export interface Project {

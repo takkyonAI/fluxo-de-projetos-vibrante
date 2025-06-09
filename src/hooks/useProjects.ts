@@ -52,7 +52,7 @@ export const useProjects = () => {
           id: task.id,
           title: task.title,
           status: task.status as 'todo' | 'in-progress' | 'completed',
-          assignee: task.assignee
+          assignees: task.assignee ? task.assignee.split(',').map((a: string) => a.trim()) : []
         })) || [],
         team: teamData?.filter(member => member.project_id === project.id).map(member => member.member_name) || []
       })) || [];
@@ -123,7 +123,7 @@ export const useProjects = () => {
               project_id: projectId,
               title: task.title,
               status: task.status,
-              assignee: task.assignee
+              assignee: task.assignees.join(', ')
             }))
           );
 
