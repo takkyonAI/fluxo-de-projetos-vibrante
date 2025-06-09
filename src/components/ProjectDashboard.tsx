@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, Search, FolderOpen, Moon, Sun } from 'lucide-react';
@@ -116,11 +117,13 @@ const ProjectDashboard = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* Logo pequena */}
+              {/* Logo usando a imagem enviada */}
               <div className="bg-white rounded-lg p-2 shadow-md">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">R</span>
-                </div>
+                <img 
+                  src="/lovable-uploads/1f1774f4-553f-4b8e-8142-308bd1e09925.png" 
+                  alt="Logo Rockfeller" 
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">Dashboard de Projetos Rockfeller</h1>
