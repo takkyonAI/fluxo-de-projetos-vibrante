@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -172,6 +171,49 @@ export const useProjects = () => {
     }
   };
 
+  const deleteProject = async (projectId: string) => {
+    try {
+      // Deletar tarefas do projeto
+      const { error: tasksError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('project_id', projectId);
+
+      if (tasksError) throw tasksError;
+
+      // Deletar membros da equipe do projeto
+      const { error: teamError } = await supabase
+        .from('project_team_members')
+        .delete()
+        .eq('project_id', projectId);
+
+      if (teamError) throw teamError;
+
+      // Deletar o projeto
+      const { error: projectError } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (projectError) throw projectError;
+
+      await loadProjects();
+      
+      toast({
+        title: "Sucesso",
+        description: "Projeto excluído com sucesso!"
+      });
+    } catch (error: any) {
+      console.error('Erro ao excluir projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir projeto: " + error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     loadProjects();
   }, []);
@@ -181,6 +223,7 @@ export const useProjects = () => {
     loading,
     saveProject,
     updateProject,
+    deleteProject,
     loadProjects
   };
 };

@@ -1,21 +1,23 @@
 
 import React, { useState } from 'react';
-import { Clock, Users, CheckCircle, Circle, AlertCircle, Plus, Edit3 } from 'lucide-react';
+import { Clock, Users, CheckCircle, Circle, AlertCircle, Plus, Edit3, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Project } from '@/types/project';
 
 interface ProjectCardProps {
   project: Project;
   onEdit: (project: Project) => void;
   onUpdateProject?: (project: Project) => void;
+  onDeleteProject?: (projectId: string) => void;
 }
 
-const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => {
+const ProjectCard = ({ project, onEdit, onUpdateProject, onDeleteProject }: ProjectCardProps) => {
   const [isManagingTasks, setIsManagingTasks] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', assignees: [] as string[], status: 'todo' as const, dueDate: '' });
   const [localProject, setLocalProject] = useState(project);
@@ -98,6 +100,35 @@ const ProjectCard = ({ project, onEdit, onUpdateProject }: ProjectCardProps) => 
             >
               <Edit3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/50"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir Projeto</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja excluir o projeto "{localProject.title}"? Esta ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => onDeleteProject?.(localProject.id)}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Excluir
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300 mt-2" onClick={() => onEdit(localProject)}>{localProject.description}</p>

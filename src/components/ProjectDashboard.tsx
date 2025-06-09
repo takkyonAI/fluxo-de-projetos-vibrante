@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, LogOut, Grid, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,7 @@ const ProjectDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'timeline'>('cards');
-  const { projects, loading, saveProject, updateProject } = useProjects();
+  const { projects, loading, saveProject, updateProject, deleteProject } = useProjects();
   const { filters, setFilters, filteredProjects } = useProjectFilters(projects);
   const { toast } = useToast();
 
@@ -155,6 +156,7 @@ const ProjectDashboard = () => {
                       project={project}
                       onEdit={handleEditProject}
                       onUpdateProject={updateProject}
+                      onDeleteProject={deleteProject}
                     />
                   ))}
                 </div>
