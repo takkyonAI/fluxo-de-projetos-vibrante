@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback } from 'react';
 import { Search, Plus, LayoutGrid, BarChart3, Moon, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -149,7 +150,7 @@ const ProjectDashboard = () => {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
       {/* Header com faixa laranja */}
-      <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-3 shadow-md">
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 p-3 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <img 
@@ -158,13 +159,13 @@ const ProjectDashboard = () => {
               className="h-8 w-auto object-contain"
               style={{ background: 'transparent' }}
             />
-            <h1 className="text-2xl font-bold text-gray-800">Dashboard de Projetos Rockfeller</h1>
+            <h1 className="text-2xl font-bold text-white">Dashboard de Projetos Rockfeller</h1>
           </div>
           <Button
             onClick={toggleDarkMode}
             variant="ghost"
             size="sm"
-            className="text-gray-800 hover:bg-orange-300/50"
+            className="text-white hover:bg-white/20"
           >
             {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
@@ -262,3 +263,4 @@ const ProjectDashboard = () => {
 };
 
 export default ProjectDashboard;
+
