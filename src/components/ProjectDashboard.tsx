@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Search, FolderOpen } from 'lucide-react';
+import { Plus, Filter, Search, FolderOpen, Moon, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProjectCard from './ProjectCard';
@@ -26,6 +26,8 @@ interface Project {
 }
 
 const ProjectDashboard = () => {
+  const [darkMode, setDarkMode] = useState(false);
+  
   const [projects, setProjects] = useState<Project[]>([
     {
       id: '1',
@@ -102,129 +104,162 @@ const ProjectDashboard = () => {
     ));
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    document.documentElement.classList.toggle('dark');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-blue-50/30 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Dashboard de Projetos</h1>
-          <p className="text-gray-600">Gerencie seus projetos e acompanhe o progresso em tempo real</p>
-        </div>
-
-        <DashboardStats projects={projects} />
-
-        <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-200/50 p-6">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+    <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
+      {/* Header com faixa amarela */}
+      <div className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Meus Projetos</h2>
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === 'cards' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('cards')}
-                  className={viewMode === 'cards' ? 'bg-purple-600 hover:bg-purple-700' : ''}
-                >
-                  Cards
-                </Button>
-                <Button
-                  variant={viewMode === 'timeline' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('timeline')}
-                  className={viewMode === 'timeline' ? 'bg-purple-600 hover:bg-purple-700' : ''}
-                >
-                  Timeline
-                </Button>
+              {/* Logo pequena */}
+              <div className="bg-white rounded-lg p-2 shadow-md">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">R</span>
+                </div>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Dashboard de Projetos Rockfeller</h1>
+                <p className="text-orange-100 text-sm">Gerencie seus projetos e acompanhe o progresso em tempo real</p>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Buscar projetos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full sm:w-64"
-                />
-              </div>
-              
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os projetos</SelectItem>
-                  <SelectItem value="completed">Concluídos</SelectItem>
-                  <SelectItem value="in-progress">Em progresso</SelectItem>
-                  <SelectItem value="not-started">Não iniciados</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Button 
-                onClick={() => {
-                  setSelectedProject(undefined);
-                  setModalOpen(true);
-                }}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Projeto
-              </Button>
-            </div>
+            {/* Botão Dark Mode */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleDarkMode}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
           </div>
+        </div>
+      </div>
 
-          {viewMode === 'cards' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onClick={() => handleEditProject(project)}
-                  onUpdateProject={handleUpdateProject}
-                />
-              ))}
-              
-              {filteredProjects.length === 0 && (
-                <div className="col-span-full text-center py-12">
-                  <div className="text-gray-400 mb-4">
-                    <FolderOpen className="w-16 h-16 mx-auto" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">
-                    Nenhum projeto encontrado
-                  </h3>
-                  <p className="text-gray-400 mb-4">
-                    {searchTerm || filterStatus !== 'all' 
-                      ? 'Tente ajustar os filtros de busca'
-                      : 'Comece criando seu primeiro projeto'
-                    }
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      setSelectedProject(undefined);
-                      setModalOpen(true);
-                    }}
-                    variant="outline"
+      {/* Conteúdo principal */}
+      <div className="bg-gradient-to-br from-gray-50 via-purple-50/30 to-blue-50/30 dark:from-gray-900 dark:via-purple-950/30 dark:to-blue-950/30 p-6">
+        <div className="max-w-7xl mx-auto">
+          <DashboardStats projects={projects} />
+
+          <div className="mt-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-200/50 dark:border-purple-700/50 p-6">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Meus Projetos</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant={viewMode === 'cards' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                    className={viewMode === 'cards' ? 'bg-purple-600 hover:bg-purple-700' : ''}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Criar Primeiro Projeto
+                    Cards
+                  </Button>
+                  <Button
+                    variant={viewMode === 'timeline' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('timeline')}
+                    className={viewMode === 'timeline' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                  >
+                    Timeline
                   </Button>
                 </div>
-              )}
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Buscar projetos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full sm:w-64"
+                  />
+                </div>
+                
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os projetos</SelectItem>
+                    <SelectItem value="completed">Concluídos</SelectItem>
+                    <SelectItem value="in-progress">Em progresso</SelectItem>
+                    <SelectItem value="not-started">Não iniciados</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  onClick={() => {
+                    setSelectedProject(undefined);
+                    setModalOpen(true);
+                  }}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Projeto
+                </Button>
+              </div>
             </div>
-          ) : (
-            <ProjectTimeline projects={filteredProjects} onEditProject={handleEditProject} />
-          )}
-        </div>
 
-        <ProjectModal
-          open={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedProject(undefined);
-          }}
-          onSave={handleSaveProject}
-          project={selectedProject}
-        />
+            {viewMode === 'cards' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onClick={() => handleEditProject(project)}
+                    onUpdateProject={handleUpdateProject}
+                  />
+                ))}
+                
+                {filteredProjects.length === 0 && (
+                  <div className="col-span-full text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <FolderOpen className="w-16 h-16 mx-auto" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">
+                      Nenhum projeto encontrado
+                    </h3>
+                    <p className="text-gray-400 mb-4">
+                      {searchTerm || filterStatus !== 'all' 
+                        ? 'Tente ajustar os filtros de busca'
+                        : 'Comece criando seu primeiro projeto'
+                      }
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        setSelectedProject(undefined);
+                        setModalOpen(true);
+                      }}
+                      variant="outline"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Criar Primeiro Projeto
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <ProjectTimeline projects={filteredProjects} onEditProject={handleEditProject} />
+            )}
+          </div>
+
+          <ProjectModal
+            open={modalOpen}
+            onClose={() => {
+              setModalOpen(false);
+              setSelectedProject(undefined);
+            }}
+            onSave={handleSaveProject}
+            project={selectedProject}
+          />
+        </div>
       </div>
     </div>
   );
