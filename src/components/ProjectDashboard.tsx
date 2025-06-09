@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import ProjectCard from './ProjectCard';
 import ProjectModal from './ProjectModal';
 import DashboardStats from './DashboardStats';
+import ProjectTimeline from './ProjectTimeline';
 import ProjectFilters from './ProjectFilters';
 import { useProjects } from '@/hooks/useProjects';
 import useProjectFilters from '@/hooks/useProjectFilters';
@@ -69,7 +70,7 @@ const ProjectDashboard = () => {
             <img 
               src="/lovable-uploads/1f1774f4-553f-4b8e-8142-308bd1e09925.png" 
               alt="Rockfeller Logo" 
-              className="h-8 w-auto"
+              className="h-4 w-auto"
             />
             <h1 className="text-3xl font-bold text-white">
               Dashboard de Projetos Rockfeller
@@ -90,6 +91,14 @@ const ProjectDashboard = () => {
           onFiltersChange={setFilters}
           projects={projects}
         />
+
+        {/* Timeline Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Timeline dos Projetos</h2>
+          </div>
+          <ProjectTimeline projects={filteredProjects} onEditProject={handleEditProject} />
+        </div>
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
