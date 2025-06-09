@@ -45,6 +45,7 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
 
   const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
   const [newMember, setNewMember] = useState('');
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
 
   // Atualizar dados quando project mudar
   React.useEffect(() => {
@@ -90,6 +91,7 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
         tasks: [...prev.tasks, task]
       }));
       setNewTask({ title: '', assignee: '', status: 'todo' });
+      setShowAssigneeDropdown(false);
     }
   };
 
@@ -125,6 +127,21 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
       ...formData,
       progress
     });
+  };
+
+  // Filtrar membros da equipe baseado no que o usuário está digitando
+  const filteredTeamMembers = formData.team.filter(member =>
+    member.toLowerCase().includes(newTask.assignee.toLowerCase())
+  );
+
+  const handleAssigneeChange = (value: string) => {
+    setNewTask(prev => ({ ...prev, assignee: value }));
+    setShowAssigneeDropdown(value.length > 0 && filteredTeamMembers.length > 0);
+  };
+
+  const selectAssignee = (member: string) => {
+    setNewTask(prev => ({ ...prev, assignee: member }));
+    setShowAssigneeDropdown(false);
   };
 
   return (
@@ -206,12 +223,27 @@ const ProjectModal = ({ open, onClose, onSave, project }: ProjectModalProps) => 
                     onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="Título da tarefa"
                   />
-                  <Input
-                    className="col-span-4"
-                    value={newTask.assignee}
-                    onChange={(e) => setNewTask(prev => ({ ...prev, assignee: e.target.value }))}
-                    placeholder="Responsável"
-                  />
+                  <div className="col-span-4 relative">
+                    <Input
+                      value={newTask.assignee}
+                      onChange={(e) => handleAssigneeChange(e.target.value)}
+                      placeholder="Responsável"
+                      onFocus={() => setShowAssigneeDropdown(newTask.assignee.length > 0 && filteredTeamMembers.length > 0)}
+                    />
+                    {showAssigneeDropdown && filteredTeamMembers.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
+                        {filteredTeamMembers.map((member) => (
+                          <div
+                            key={member}
+                            className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => selectAssignee(member)}
+                          >
+                            {member}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Select value={newTask.status} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, status: value }))}>
                     <SelectTrigger className="col-span-2">
                       <SelectValue />
