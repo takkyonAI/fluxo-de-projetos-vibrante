@@ -81,12 +81,12 @@ const ProjectFiltersComponent = ({ filters, onFiltersChange, projects }: Project
 
         <div>
           <Label htmlFor="team-member-filter">Membro da Equipe</Label>
-          <Select value={filters.teamMember} onValueChange={(value) => handleFilterChange('teamMember', value)}>
+          <Select value={filters.teamMember || "all-members"} onValueChange={(value) => handleFilterChange('teamMember', value === "all-members" ? "" : value)}>
             <SelectTrigger>
               <SelectValue placeholder="Selecionar membro" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all-members">Todos</SelectItem>
               {allTeamMembers.map((member) => (
                 <SelectItem key={member} value={member}>
                   {member}
