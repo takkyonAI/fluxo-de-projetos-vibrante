@@ -47,9 +47,9 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="w-3 h-3 text-green-500" />;
+        return <CheckCircle className="w-3 h-3 text-emerald-400" />;
       case 'in-progress':
-        return <AlertCircle className="w-3 h-3 text-orange-500" />;
+        return <AlertCircle className="w-3 h-3 text-cyan-400" />;
       default:
         return <Circle className="w-3 h-3 text-gray-400" />;
     }
@@ -58,12 +58,19 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-200';
+        return 'bg-gradient-to-r from-emerald-400 to-teal-400';
       case 'in-progress':
-        return 'bg-orange-200';
+        return 'bg-gradient-to-r from-cyan-400 to-blue-500';
       default:
-        return 'bg-gray-200';
+        return 'bg-gradient-to-r from-gray-300 to-gray-400';
     }
+  };
+
+  const getProjectBarColor = (progress: number) => {
+    if (progress === 100) return 'bg-gradient-to-r from-emerald-400 via-teal-400 to-green-500';
+    if (progress > 50) return 'bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500';
+    if (progress > 0) return 'bg-gradient-to-r from-orange-400 via-pink-500 to-red-500';
+    return 'bg-gradient-to-r from-gray-300 to-gray-500';
   };
 
   const getProjectPosition = (project: Project) => {
@@ -86,18 +93,18 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
       {/* Timeline Header */}
       <div className="grid grid-cols-[300px_1fr] gap-4">
         <div className="font-semibold text-gray-700 p-4">
-          <div className="text-sm text-gray-500 mb-2">PROJETO</div>
+          <div className="text-sm text-purple-600 mb-2 font-bold">PROJETO</div>
           <div className="text-xs text-gray-400">Progresso | Início | Término</div>
         </div>
         <div className="grid grid-cols-12 gap-1">
           {timelineData.map((month) => (
             <div key={month.key} className="text-center">
-              <div className="text-xs font-medium text-gray-600 p-2 border-l border-gray-200">
+              <div className="text-xs font-medium text-purple-700 p-2 border-l border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
                 {month.label}
               </div>
               <div className="grid grid-cols-4 gap-px">
                 {[1, 2, 3, 4].map((week) => (
-                  <div key={week} className="text-xs text-gray-400 p-1 border-l border-gray-100">
+                  <div key={week} className="text-xs text-gray-400 p-1 border-l border-purple-100 bg-purple-50/30">
                     w{week}
                   </div>
                 ))}
@@ -118,23 +125,23 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
             <div key={project.id} className="grid grid-cols-[300px_1fr] gap-4 group">
               {/* Project Info */}
               <Card 
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border border-purple-200/50"
                 onClick={() => onEditProject(project)}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-800 group-hover:text-blue-600">
+                  <CardTitle className="text-sm font-medium text-gray-800 group-hover:text-purple-600">
                     {project.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">{project.progress}%</span>
+                    <span className="text-purple-600 font-bold">{project.progress}%</span>
                     <div className="flex items-center gap-1 text-gray-500">
-                      <Calendar className="w-3 h-3" />
+                      <Calendar className="w-3 h-3 text-cyan-500" />
                       <span>{new Date(startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
                     </div>
                     <div className="flex items-center gap-1 text-gray-500">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-3 h-3 text-pink-500" />
                       <span>{new Date(project.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
                     </div>
                   </div>
@@ -144,13 +151,13 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                       <div key={task.id} className="flex items-center gap-2 text-xs">
                         {getStatusIcon(task.status)}
                         <span className="flex-1 truncate">{task.title}</span>
-                        <Badge variant="outline" className="text-xs px-1 py-0">
+                        <Badge variant="outline" className="text-xs px-1 py-0 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
                           {task.assignee.split(' ')[0]}
                         </Badge>
                       </div>
                     ))}
                     {project.tasks.length > 3 && (
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-purple-500 font-medium">
                         +{project.tasks.length - 3} mais tarefas
                       </div>
                     )}
@@ -161,7 +168,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
               {/* Timeline Bars */}
               <div className="grid grid-cols-12 gap-1 items-center min-h-[120px]">
                 {timelineData.map((month, monthIndex) => (
-                  <div key={month.key} className="relative h-full border-l border-gray-200">
+                  <div key={month.key} className="relative h-full border-l border-purple-200">
                     <div className="grid grid-cols-4 gap-px h-full">
                       {[1, 2, 3, 4].map((week, weekIndex) => {
                         const weekStart = monthIndex * 4 + weekIndex;
@@ -172,18 +179,21 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                         const progressWeeks = Math.floor((project.progress / 100) * (projectPos.duration * 4));
                         const isCompleted = weekStart < projectStart + progressWeeks;
                         
+                        let barClass = '';
+                        if (isInProject) {
+                          if (isCompleted) {
+                            barClass = 'bg-gradient-to-r from-emerald-400 to-teal-500 shadow-lg shadow-emerald-200';
+                          } else if (weekStart < projectStart + progressWeeks + 2) {
+                            barClass = 'bg-gradient-to-r from-cyan-400 to-blue-500 shadow-lg shadow-cyan-200';
+                          } else {
+                            barClass = 'bg-gradient-to-r from-gray-300 to-gray-400 shadow-sm';
+                          }
+                        }
+                        
                         return (
                           <div
                             key={week}
-                            className={`h-8 border-l border-gray-100 ${
-                              isInProject
-                                ? isCompleted
-                                  ? 'bg-green-200'
-                                  : weekStart < projectStart + progressWeeks + 2
-                                  ? 'bg-orange-200'
-                                  : 'bg-gray-200'
-                                : ''
-                            }`}
+                            className={`h-8 border-l border-purple-100 transition-all duration-300 hover:scale-105 ${barClass}`}
                           />
                         );
                       })}
@@ -198,7 +208,7 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                           return (
                             <div
                               key={task.id}
-                              className={`absolute top-2 h-4 w-4 rounded-sm ${getStatusColor(task.status)} border border-white flex items-center justify-center`}
+                              className={`absolute top-2 h-4 w-4 rounded-full ${getStatusColor(task.status)} border-2 border-white flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110`}
                               style={{ left: `${weekPos * 25}%` }}
                               title={`${task.title} - ${task.assignee}`}
                             >
@@ -218,18 +228,18 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-6 text-xs text-gray-600 pt-4 border-t">
+      <div className="flex items-center gap-6 text-xs text-gray-600 pt-4 border-t border-purple-200">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-200 rounded"></div>
-          <span>Concluído</span>
+          <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-teal-500 rounded shadow-lg"></div>
+          <span className="text-emerald-600 font-medium">Concluído</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-orange-200 rounded"></div>
-          <span>Em progresso</span>
+          <div className="w-4 h-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded shadow-lg"></div>
+          <span className="text-cyan-600 font-medium">Em progresso</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-200 rounded"></div>
-          <span>Planejado</span>
+          <div className="w-4 h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded"></div>
+          <span className="text-gray-500 font-medium">Planejado</span>
         </div>
       </div>
     </div>

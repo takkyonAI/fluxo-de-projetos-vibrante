@@ -96,25 +96,32 @@ const ProjectDashboard = () => {
     setModalOpen(true);
   };
 
+  const handleUpdateProject = (updatedProject: Project) => {
+    setProjects(prev => prev.map(p => 
+      p.id === updatedProject.id ? updatedProject : p
+    ));
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-blue-50/30 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard de Projetos</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Dashboard de Projetos</h1>
           <p className="text-gray-600">Gerencie seus projetos e acompanhe o progresso em tempo real</p>
         </div>
 
         <DashboardStats projects={projects} />
 
-        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-200/50 p-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-xl font-semibold text-gray-800">Meus Projetos</h2>
+              <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Meus Projetos</h2>
               <div className="flex gap-2">
                 <Button
                   variant={viewMode === 'cards' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('cards')}
+                  className={viewMode === 'cards' ? 'bg-purple-600 hover:bg-purple-700' : ''}
                 >
                   Cards
                 </Button>
@@ -122,6 +129,7 @@ const ProjectDashboard = () => {
                   variant={viewMode === 'timeline' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('timeline')}
+                  className={viewMode === 'timeline' ? 'bg-purple-600 hover:bg-purple-700' : ''}
                 >
                   Timeline
                 </Button>
@@ -157,7 +165,7 @@ const ProjectDashboard = () => {
                   setSelectedProject(undefined);
                   setModalOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Projeto
@@ -172,6 +180,7 @@ const ProjectDashboard = () => {
                   key={project.id}
                   project={project}
                   onClick={() => handleEditProject(project)}
+                  onUpdateProject={handleUpdateProject}
                 />
               ))}
               

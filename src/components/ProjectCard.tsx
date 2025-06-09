@@ -1,9 +1,12 @@
 
-import React from 'react';
-import { Clock, Users, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Users, CheckCircle, Circle, AlertCircle, Plus, Edit3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Task {
   id: string;
@@ -25,66 +28,188 @@ interface Project {
 interface ProjectCardProps {
   project: Project;
   onClick: () => void;
+  onUpdateProject?: (project: Project) => void;
 }
 
-const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
+const ProjectCard = ({ project, onClick, onUpdateProject }: ProjectCardProps) => {
+  const [isManagingTasks, setIsManagingTasks] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', assignee: '', status: 'todo' as const });
+  const [localProject, setLocalProject] = useState(project);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-emerald-400" />;
       case 'in-progress':
-        return <AlertCircle className="w-4 h-4 text-orange-500" />;
+        return <AlertCircle className="w-4 h-4 text-orange-400" />;
       default:
         return <Circle className="w-4 h-4 text-gray-400" />;
     }
   };
 
-  const completedTasks = project.tasks.filter(task => task.status === 'completed').length;
-  const totalTasks = project.tasks.length;
+  const addTask = () => {
+    if (newTask.title && newTask.assignee) {
+      const task = {
+        id: Date.now().toString(),
+        ...newTask
+      };
+      const updatedProject = {
+        ...localProject,
+        tasks: [...localProject.tasks, task]
+      };
+      
+      // Recalcular progresso
+      const completedTasks = updatedProject.tasks.filter(t => t.status === 'completed').length;
+      updatedProject.progress = updatedProject.tasks.length > 0 ? 
+        Math.round((completedTasks / updatedProject.tasks.length) * 100) : 0;
+      
+      setLocalProject(updatedProject);
+      onUpdateProject?.(updatedProject);
+      setNewTask({ title: '', assignee: '', status: 'todo' });
+    }
+  };
+
+  const updateTaskStatus = (taskId: string, status: 'todo' | 'in-progress' | 'completed') => {
+    const updatedProject = {
+      ...localProject,
+      tasks: localProject.tasks.map(task => 
+        task.id === taskId ? { ...task, status } : task
+      )
+    };
+    
+    // Recalcular progresso
+    const completedTasks = updatedProject.tasks.filter(t => t.status === 'completed').length;
+    updatedProject.progress = updatedProject.tasks.length > 0 ? 
+      Math.round((completedTasks / updatedProject.tasks.length) * 100) : 0;
+    
+    setLocalProject(updatedProject);
+    onUpdateProject?.(updatedProject);
+  };
+
+  const completedTasks = localProject.tasks.filter(task => task.status === 'completed').length;
+  const totalTasks = localProject.tasks.length;
 
   return (
-    <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-blue-50/50 border border-blue-100">
-      <CardHeader className="pb-3" onClick={onClick}>
+    <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 border border-blue-200/50 hover:border-purple-300/60">
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-            {project.title}
+          <CardTitle 
+            className="text-lg font-semibold text-gray-800 group-hover:text-purple-600 transition-colors cursor-pointer"
+            onClick={onClick}
+          >
+            {localProject.title}
           </CardTitle>
-          <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200">
-            {project.progress}% concluído
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 border-purple-200 text-purple-700">
+              {localProject.progress}% concluído
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsManagingTasks(!isManagingTasks);
+              }}
+              className="h-8 w-8 p-0 hover:bg-purple-100"
+            >
+              <Edit3 className="w-4 h-4 text-purple-600" />
+            </Button>
+          </div>
         </div>
-        <p className="text-sm text-gray-600 mt-2">{project.description}</p>
+        <p className="text-sm text-gray-600 mt-2" onClick={onClick}>{localProject.description}</p>
       </CardHeader>
       
-      <CardContent className="space-y-4" onClick={onClick}>
-        <div className="space-y-2">
+      <CardContent className="space-y-4">
+        <div className="space-y-2" onClick={onClick}>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Progresso</span>
-            <span className="font-medium">{completedTasks}/{totalTasks} tarefas</span>
+            <span className="font-medium text-purple-700">{completedTasks}/{totalTasks} tarefas</span>
           </div>
-          <Progress value={project.progress} className="h-2 bg-gray-100" />
+          <Progress value={localProject.progress} className="h-2 bg-gray-100" />
         </div>
+
+        {isManagingTasks && (
+          <div className="space-y-3 pt-3 border-t border-purple-100">
+            <h4 className="text-sm font-medium text-purple-700">Gerenciar Etapas</h4>
+            
+            {/* Nova tarefa */}
+            <div className="space-y-2">
+              <Input
+                placeholder="Nome da etapa"
+                value={newTask.title}
+                onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                className="text-sm"
+              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Responsável"
+                  value={newTask.assignee}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, assignee: e.target.value }))}
+                  className="text-sm flex-1"
+                />
+                <Select value={newTask.status} onValueChange={(value: any) => setNewTask(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger className="w-32 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todo">A Fazer</SelectItem>
+                    <SelectItem value="in-progress">Em Progresso</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={addTask} size="sm" className="bg-purple-600 hover:bg-purple-700">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Lista de tarefas */}
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {localProject.tasks.map((task) => (
+                <div key={task.id} className="flex items-center justify-between p-2 bg-purple-50/50 rounded-lg border border-purple-100">
+                  <div className="flex items-center gap-2 flex-1">
+                    {getStatusIcon(task.status)}
+                    <div className="flex-1">
+                      <p className="text-xs font-medium">{task.title}</p>
+                      <p className="text-xs text-gray-500">{task.assignee}</p>
+                    </div>
+                  </div>
+                  <Select value={task.status} onValueChange={(value: any) => updateTaskStatus(task.id, value)}>
+                    <SelectTrigger className="w-20 h-6 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todo">A Fazer</SelectItem>
+                      <SelectItem value="in-progress">Progresso</SelectItem>
+                      <SelectItem value="completed">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100" onClick={onClick}>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-600">{project.dueDate}</span>
+            <span className="text-sm text-gray-600">{localProject.dueDate}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-gray-400" />
             <div className="flex -space-x-2">
-              {project.team.slice(0, 3).map((member, index) => (
+              {localProject.team.slice(0, 3).map((member, index) => (
                 <div
                   key={index}
-                  className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-xs text-white font-medium border-2 border-white"
+                  className="w-6 h-6 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-xs text-white font-medium border-2 border-white"
                 >
                   {member.charAt(0).toUpperCase()}
                 </div>
               ))}
-              {project.team.length > 3 && (
+              {localProject.team.length > 3 && (
                 <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 font-medium border-2 border-white">
-                  +{project.team.length - 3}
+                  +{localProject.team.length - 3}
                 </div>
               )}
             </div>
