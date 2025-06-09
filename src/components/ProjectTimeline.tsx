@@ -1,6 +1,6 @@
 
-import React, { useMemo } from 'react';
-import { Calendar, Clock, User, CheckCircle, AlertCircle, Circle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Calendar, Clock, User, CheckCircle, AlertCircle, Circle, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -27,6 +27,8 @@ interface ProjectTimelineProps {
 }
 
 const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+
   const timelineData = useMemo(() => {
     const months = [];
     const currentDate = new Date();
@@ -43,6 +45,16 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
 
     return months;
   }, []);
+
+  const toggleProjectExpansion = (projectId: string) => {
+    const newExpanded = new Set(expandedProjects);
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
+    } else {
+      newExpanded.add(projectId);
+    }
+    setExpandedProjects(newExpanded);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -66,19 +78,18 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
     }
   };
 
-  const getProjectBarColor = (progress: number) => {
-    if (progress === 100) return 'bg-gradient-to-r from-emerald-400 via-teal-400 to-green-500';
-    if (progress > 50) return 'bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500';
-    if (progress > 0) return 'bg-gradient-to-r from-orange-400 via-pink-500 to-red-500';
-    return 'bg-gradient-to-r from-gray-300 to-gray-500';
+  const getProjectStatus = (progress: number) => {
+    if (progress === 100) return 'Concluído';
+    if (progress > 0) return 'Em Progresso';
+    return 'Não Iniciado';
   };
 
   const getProjectPosition = (project: Project) => {
     const dueDate = new Date(project.dueDate);
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 2); // Start 2 months ago
+    startDate.setMonth(startDate.getMonth() - 2);
     
-    const duration = 6; // 6 months duration
+    const duration = 6;
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + duration);
 
@@ -120,53 +131,86 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
           const projectPos = getProjectPosition(project);
           const startDate = new Date(project.dueDate);
           startDate.setMonth(startDate.getMonth() - 3);
+          const isExpanded = expandedProjects.has(project.id);
           
           return (
             <div key={project.id} className="grid grid-cols-[300px_1fr] gap-4 group">
-              {/* Project Info */}
-              <Card 
-                className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border border-purple-200/50"
-                onClick={() => onEditProject(project)}
-              >
+              {/* Project Info - Compact or Expanded */}
+              <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white via-purple-50/30 to-blue-50/30 border border-purple-200/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-800 group-hover:text-purple-600">
-                    {project.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-purple-600 font-bold">{project.progress}%</span>
-                    <div className="flex items-center gap-1 text-gray-500">
-                      <Calendar className="w-3 h-3 text-cyan-500" />
-                      <span>{new Date(startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-gray-500">
-                      <Clock className="w-3 h-3 text-pink-500" />
-                      <span>{new Date(project.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    {project.tasks.slice(0, 3).map((task) => (
-                      <div key={task.id} className="flex items-center gap-2 text-xs">
-                        {getStatusIcon(task.status)}
-                        <span className="flex-1 truncate">{task.title}</span>
-                        <Badge variant="outline" className="text-xs px-1 py-0 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-                          {task.assignee.split(' ')[0]}
-                        </Badge>
-                      </div>
-                    ))}
-                    {project.tasks.length > 3 && (
-                      <div className="text-xs text-purple-500 font-medium">
-                        +{project.tasks.length - 3} mais tarefas
-                      </div>
+                  <div 
+                    className="flex items-center justify-between"
+                    onClick={() => toggleProjectExpansion(project.id)}
+                  >
+                    <CardTitle className="text-sm font-medium text-gray-800 group-hover:text-purple-600 flex-1">
+                      {project.title}
+                    </CardTitle>
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-purple-600" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-purple-600" />
                     )}
                   </div>
-                </CardContent>
+                  
+                  {/* Status always visible */}
+                  <div className="flex items-center justify-between text-xs">
+                    <Badge variant="outline" className="text-xs bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 text-purple-700">
+                      {getProjectStatus(project.progress)}
+                    </Badge>
+                    <span className="text-purple-600 font-bold">{project.progress}%</span>
+                  </div>
+                </CardHeader>
+                
+                {/* Expanded Content */}
+                {isExpanded && (
+                  <CardContent className="space-y-2 animate-fade-in">
+                    <p className="text-xs text-gray-600">{project.description}</p>
+                    
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <Calendar className="w-3 h-3 text-cyan-500" />
+                        <span>{new Date(startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <Clock className="w-3 h-3 text-pink-500" />
+                        <span>{new Date(project.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      {project.tasks.slice(0, 3).map((task) => (
+                        <div key={task.id} className="flex items-center gap-2 text-xs">
+                          {getStatusIcon(task.status)}
+                          <span className="flex-1 truncate">{task.title}</span>
+                          <Badge variant="outline" className="text-xs px-1 py-0 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                            {task.assignee.split(' ')[0]}
+                          </Badge>
+                        </div>
+                      ))}
+                      {project.tasks.length > 3 && (
+                        <div className="text-xs text-purple-500 font-medium">
+                          +{project.tasks.length - 3} mais tarefas
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 border-t border-purple-100">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditProject(project);
+                        }}
+                        className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                      >
+                        Editar Projeto
+                      </button>
+                    </div>
+                  </CardContent>
+                )}
               </Card>
 
               {/* Timeline Bars */}
-              <div className="grid grid-cols-12 gap-1 items-center min-h-[120px]">
+              <div className="grid grid-cols-12 gap-1 items-center min-h-[80px]">
                 {timelineData.map((month, monthIndex) => (
                   <div key={month.key} className="relative h-full border-l border-purple-200">
                     <div className="grid grid-cols-4 gap-px h-full">
@@ -193,32 +237,34 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                         return (
                           <div
                             key={week}
-                            className={`h-8 border-l border-purple-100 transition-all duration-300 hover:scale-105 ${barClass}`}
+                            className={`h-6 border-l border-purple-100 transition-all duration-300 hover:scale-105 ${barClass}`}
                           />
                         );
                       })}
                     </div>
                     
-                    {/* Task indicators */}
-                    <div className="absolute top-0 left-0 w-full h-full">
-                      {project.tasks.map((task, taskIndex) => {
-                        const taskWeek = projectPos.start * 4 + (taskIndex * 2);
-                        if (Math.floor(taskWeek / 4) === monthIndex) {
-                          const weekPos = taskWeek % 4;
-                          return (
-                            <div
-                              key={task.id}
-                              className={`absolute top-2 h-4 w-4 rounded-full ${getStatusColor(task.status)} border-2 border-white flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110`}
-                              style={{ left: `${weekPos * 25}%` }}
-                              title={`${task.title} - ${task.assignee}`}
-                            >
-                              {getStatusIcon(task.status)}
-                            </div>
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
+                    {/* Task indicators - only show if expanded or limited view */}
+                    {(isExpanded || !isExpanded) && (
+                      <div className="absolute top-0 left-0 w-full h-full">
+                        {project.tasks.slice(0, isExpanded ? project.tasks.length : 2).map((task, taskIndex) => {
+                          const taskWeek = projectPos.start * 4 + (taskIndex * 2);
+                          if (Math.floor(taskWeek / 4) === monthIndex) {
+                            const weekPos = taskWeek % 4;
+                            return (
+                              <div
+                                key={task.id}
+                                className={`absolute top-1 h-3 w-3 rounded-full ${getStatusColor(task.status)} border-2 border-white flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110`}
+                                style={{ left: `${weekPos * 25}%` }}
+                                title={`${task.title} - ${task.assignee}`}
+                              >
+                                <div className="w-1 h-1 bg-white rounded-full"></div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
