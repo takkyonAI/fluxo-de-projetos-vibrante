@@ -1,11 +1,11 @@
-
 export interface Task {
   id: string;
   title: string;
   status: 'todo' | 'in-progress' | 'completed';
   assignees: string[];
-  assignee: string; // Mantendo para compatibilidade com o banco
+  assignee?: string; // Tornando opcional para compatibilidade
   dueDate?: string; // Nova propriedade para prazo final da tarefa
+  completedAt?: string; // Data de conclusão da tarefa
 }
 
 export interface Project {

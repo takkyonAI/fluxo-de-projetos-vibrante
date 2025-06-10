@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Clock, Users, CheckCircle, Circle, AlertCircle, Plus, Edit3, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -59,7 +58,11 @@ const ProjectCard = ({ project, onEdit, onUpdateProject, onDeleteProject }: Proj
     const updatedProject = {
       ...localProject,
       tasks: localProject.tasks.map(task => 
-        task.id === taskId ? { ...task, status } : task
+        task.id === taskId ? { 
+          ...task, 
+          status,
+          completedAt: status === 'completed' ? new Date().toISOString() : undefined
+        } : task
       )
     };
     
@@ -190,27 +193,41 @@ const ProjectCard = ({ project, onEdit, onUpdateProject, onDeleteProject }: Proj
             {/* Lista de tarefas */}
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {localProject.tasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-2 bg-purple-50/80 dark:bg-purple-900/30 rounded-lg border border-purple-100 dark:border-purple-800">
-                  <div className="flex items-center gap-2 flex-1">
-                    {getStatusIcon(task.status)}
+                <div 
+                  key={task.id} 
+                  className="flex items-center justify-between p-3 bg-purple-50/80 dark:bg-purple-900/30 rounded-lg border border-purple-100 dark:border-purple-800"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="flex-shrink-0">
+                      {getStatusIcon(task.status)}
+                    </div>
                     <div className="flex-1">
-                      <p className="text-xs font-medium dark:text-gray-200">{task.title}</p>
+                      <p className="text-sm font-medium dark:text-gray-200">{task.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{task.assignees.join(', ')}</p>
                       {task.dueDate && (
                         <p className="text-xs text-orange-500 dark:text-orange-400">Prazo: {new Date(task.dueDate).toLocaleDateString('pt-BR')}</p>
                       )}
+                      {task.status === 'completed' && task.completedAt && (
+                        <p className="text-xs text-emerald-500 dark:text-emerald-400">Concluído em: {new Date(task.completedAt).toLocaleDateString('pt-BR')}</p>
+                      )}
                     </div>
                   </div>
-                  <Select value={task.status} onValueChange={(value: any) => updateTaskStatus(task.id, value)}>
-                    <SelectTrigger className="w-20 h-6 text-xs dark:bg-gray-800/50 dark:border-gray-600">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todo">A Fazer</SelectItem>
-                      <SelectItem value="in-progress">Progresso</SelectItem>
-                      <SelectItem value="completed">Concluído</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-2 py-1 bg-white dark:bg-gray-800 hover:bg-purple-100 dark:hover:bg-purple-800"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newStatus = task.status === 'todo' ? 'in-progress' : 
+                                        task.status === 'in-progress' ? 'completed' : 'todo';
+                        updateTaskStatus(task.id, newStatus);
+                      }}
+                    >
+                      {task.status === 'todo' ? '▶️ Iniciar' : 
+                       task.status === 'in-progress' ? '✅ Concluir' : '🔄 Reiniciar'}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

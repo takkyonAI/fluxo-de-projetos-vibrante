@@ -389,32 +389,52 @@ const ProjectModal = ({ open, onClose, onSave, project, allProjects = [] }: Proj
                 )}
               </div>
 
-              <div className="space-y-2 mt-4 max-h-60 overflow-y-auto">
-                {formData.tasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(task.status)}
-                      <div>
-                        <p className="font-medium text-sm">{task.title}</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {task.assignees.map((assignee) => (
-                            <Badge key={assignee} variant="outline" className="text-xs">
-                              {assignee}
-                            </Badge>
-                          ))}
+              <div className="mt-6">
+                <Label className="mb-2 block">Tarefas</Label>
+                <div className="space-y-2">
+                  {formData.tasks.map((task, idx) => (
+                    <div key={task.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center gap-3 flex-1">
+                        {getStatusIcon(task.status)}
+                        <div>
+                          <p className="text-sm font-medium dark:text-gray-200">{task.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{task.assignees.join(', ')}</p>
+                          {task.dueDate && (
+                            <p className="text-xs text-orange-500 dark:text-orange-400">Prazo: {new Date(task.dueDate).toLocaleDateString('pt-BR')}</p>
+                          )}
+                          {task.status === 'completed' && task.completedAt && (
+                            <p className="text-xs text-emerald-500 dark:text-emerald-400">Concluído em: {new Date(task.completedAt).toLocaleDateString('pt-BR')}</p>
+                          )}
                         </div>
-                        {task.dueDate && (
-                          <p className="text-xs text-orange-500 mt-1">
-                            Prazo: {new Date(task.dueDate).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-2 py-1 bg-white dark:bg-gray-800 hover:bg-purple-100 dark:hover:bg-purple-800"
+                          onClick={() => {
+                            setFormData(prev => {
+                              const newTasks = prev.tasks.map((t, i) => {
+                                if (i !== idx) return t;
+                                let newStatus: 'todo' | 'in-progress' | 'completed' = t.status === 'todo' ? 'in-progress' : t.status === 'in-progress' ? 'completed' : 'todo';
+                                let completedAt = t.completedAt;
+                                if (newStatus === 'completed') completedAt = new Date().toISOString();
+                                if (t.status === 'completed' && newStatus !== 'completed') completedAt = undefined;
+                                return { ...t, status: newStatus, completedAt };
+                              });
+                              return { ...prev, tasks: newTasks };
+                            });
+                          }}
+                        >
+                          {task.status === 'todo' ? '▶️ Iniciar' : task.status === 'in-progress' ? '✅ Concluir' : '🔄 Reiniciar'}
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => removeTask(task.id)}>
+                          <X className="w-4 h-4 text-red-500" />
+                        </Button>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => removeTask(task.id)}>
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>

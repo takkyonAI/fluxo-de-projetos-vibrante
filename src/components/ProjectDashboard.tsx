@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, LogOut, Grid, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -71,7 +70,7 @@ const ProjectDashboard = () => {
             <img 
               src="/lovable-uploads/1f1774f4-553f-4b8e-8142-308bd1e09925.png" 
               alt="Rockfeller Logo" 
-              className="h-2 w-auto"
+              className="h-[1.1rem] w-auto"
             />
             <h1 className="text-3xl font-bold text-white">
               Dashboard de Projetos Rockfeller

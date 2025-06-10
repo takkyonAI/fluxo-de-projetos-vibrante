@@ -177,6 +177,9 @@ const ProjectTimeline = ({ projects, onEditProject }: ProjectTimelineProps) => {
                           {task.dueDate && (
                             <span className="text-xs text-orange-500">{new Date(task.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
                           )}
+                          {task.status === 'completed' && task.completedAt && (
+                            <span className="text-xs text-emerald-500">{new Date(task.completedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
+                          )}
                         </div>
                       ))}
                       {project.tasks.length > 3 && (

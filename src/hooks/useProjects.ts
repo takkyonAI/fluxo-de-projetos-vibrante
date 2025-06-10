@@ -53,7 +53,8 @@ export const useProjects = () => {
           status: task.status as 'todo' | 'in-progress' | 'completed',
           assignees: task.assignee ? task.assignee.split(',').map((a: string) => a.trim()) : [],
           assignee: task.assignee || '', // Mantendo para compatibilidade
-          dueDate: task.due_date || undefined
+          dueDate: task.due_date || undefined,
+          completedAt: task.completed_at || undefined
         })) || [],
         team: teamData?.filter(member => member.project_id === project.id).map(member => member.member_name) || []
       })) || [];
@@ -125,7 +126,8 @@ export const useProjects = () => {
               title: task.title,
               status: task.status,
               assignee: task.assignees.join(', '),
-              due_date: task.dueDate || null
+              due_date: task.dueDate || null,
+              completed_at: task.status === 'completed' ? new Date().toISOString() : null
             }))
           );
 
@@ -166,9 +168,56 @@ export const useProjects = () => {
 
   const updateProject = async (updatedProject: Project) => {
     try {
-      await saveProject(updatedProject, updatedProject);
-    } catch (error) {
+      const { data: user } = await supabase.auth.getUser();
+      
+      if (!user.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Atualizar o projeto
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({
+          title: updatedProject.title,
+          description: updatedProject.description,
+          progress: updatedProject.progress,
+          priority: updatedProject.priority,
+          due_date: updatedProject.dueDate || null
+        })
+        .eq('id', updatedProject.id);
+
+      if (updateError) throw updateError;
+
+      // Atualizar as tarefas
+      for (const task of updatedProject.tasks) {
+        const { error: taskError } = await supabase
+          .from('tasks')
+          .update({
+            title: task.title,
+            status: task.status,
+            assignee: task.assignees.join(', '),
+            due_date: task.dueDate || null,
+            completed_at: task.status === 'completed' ? new Date().toISOString() : null
+          })
+          .eq('id', task.id);
+
+        if (taskError) throw taskError;
+      }
+
+      await loadProjects();
+      
+      toast({
+        title: "Sucesso",
+        description: "Projeto atualizado com sucesso!"
+      });
+    } catch (error: any) {
       console.error('Erro ao atualizar projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar projeto: " + error.message,
+        variant: "destructive"
+      });
+      throw error;
     }
   };
 
